@@ -10,6 +10,7 @@ import {
 } from '../../redux/slices/deckBuilderSlice';
 import type { RootState } from '../../redux/store';
 import type { Card, Deck } from '../../types/types';
+import { importDeck } from '../../utils/deckImporter';
 import CardFilters from '../CardFilters';
 import CardGrid from '../CardGrid';
 
@@ -18,11 +19,15 @@ const DeckBuilder: React.FC = () => {
   const {
     filteredCards,
     selectedDeck,
+    allCards,
     isLoading,
     error
   } = useSelector((state: RootState) => state.deckBuilder);
 
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importText, setImportText] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
 
   const handleCreateDeck = () => {
     const newDeck: Deck = {
@@ -34,6 +39,34 @@ const DeckBuilder: React.FC = () => {
       updatedAt: new Date()
     };
     dispatch(setSelectedDeck(newDeck));
+  };
+
+  const handleImportDeck = async () => {
+    setImportError(null);
+    
+    try {
+      const result = await importDeck(importText, allCards);
+      
+      if (!result.success) {
+        setImportError(result.error || 'Failed to import deck');
+        return;
+      }
+      
+      const newDeck: Deck = {
+        id: crypto.randomUUID(),
+        name: 'Imported Deck',
+        leader: result.leader || null as any,
+        cards: result.cards,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      
+      dispatch(setSelectedDeck(newDeck));
+      setImportModalOpen(false);
+      setImportText('');
+    } catch (error) {
+      setImportError('Failed to import deck');
+    }
   };
 
   const handleCardClick = (card: Card) => {
@@ -69,35 +102,78 @@ const DeckBuilder: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-4">
-      {/* Create/Save Deck buttons */}
+      {/* Create/Save/Import Deck buttons */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex justify-between items-center">
-          {selectedDeck ? (
-            <>
-              <input
-                type="text"
-                value={selectedDeck.name}
-                onChange={(e) => dispatch(setDeckName(e.target.value))}
-                className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Deck Name"
-              />
+          <div className="flex gap-4 items-center">
+            {selectedDeck ? (
+              <>
+                <input
+                  type="text"
+                  value={selectedDeck.name}
+                  onChange={(e) => dispatch(setDeckName(e.target.value))}
+                  className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Deck Name"
+                />
+                <button
+                  onClick={() => dispatch(saveDeck(selectedDeck))}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  Save Deck
+                </button>
+              </>
+            ) : (
               <button
-                onClick={() => dispatch(saveDeck(selectedDeck))}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                onClick={handleCreateDeck}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
               >
-                Save Deck
+                Create New Deck
               </button>
-            </>
-          ) : (
+            )}
             <button
-              onClick={handleCreateDeck}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              onClick={() => setImportModalOpen(true)}
+              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
             >
-              Create New Deck
+              Import Deck
             </button>
-          )}
+          </div>
         </div>
       </div>
+
+      {/* Import Modal */}
+      {importModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
+            <h2 className="text-xl font-bold mb-4">Import Deck</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Paste your deck formula below (e.g., "4xOP01-001" format, one card per line)
+            </p>
+            <textarea
+              value={importText}
+              onChange={(e) => setImportText(e.target.value)}
+              className="w-full h-64 p-2 border rounded-lg mb-4 font-mono"
+              placeholder="1xOP01-001&#13;4xOP02-015&#13;4xOP01-016"
+            />
+            {importError && (
+              <p className="text-red-500 mb-4">{importError}</p>
+            )}
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setImportModalOpen(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImportDeck}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content area - Three columns */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
