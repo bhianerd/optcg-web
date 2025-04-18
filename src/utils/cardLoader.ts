@@ -1,89 +1,100 @@
-import { Card } from '../types/types';
+import type { Card } from '../types/types';
+import { CardColor, CardType } from '../types/types';
+
+type RawCard = {
+  id: string;
+  name: string;
+  colors: string[];
+  category: string;
+  cost: number;
+  power: number;
+  counter: number;
+  rarity: string;
+  attributes: string[];
+  types: string[];
+  effect: string | null;
+  trigger: string | null;
+};
+
+type CardSet = {
+  cards: RawCard[];
+};
+
+type CardData = {
+  card_sets: Record<string, CardSet>;
+};
 
 export async function loadCards(): Promise<Card[]> {
   try {
     console.log('Fetching cards from:', '/data/en/cards.json');
     const response = await fetch('/data/en/cards.json');
-    console.log('Response status:', response.status);
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error('Failed to fetch cards');
     }
     
-    const data = await response.json();
-    console.log('Raw data type:', typeof data);
-    console.log('Raw data keys:', Object.keys(data));
+    const data = await response.json() as CardData;
+    const cardSets = data.card_sets;
+    const allCards = Object.values(cardSets).flatMap(set => set.cards);
     
-    // Extract cards from the nested structure
-    const cardSets = data.card_sets || {};
-    console.log('Card sets:', Object.keys(cardSets));
-    
-    const allCards = Object.values(cardSets).flatMap((set: any) => {
-      console.log('Set:', set.set_id, 'Cards:', set.cards?.length);
-      if (set.cards && set.cards.length > 0) {
-        console.log('Sample card from set:', {
-          id: set.cards[0].id,
-          name: set.cards[0].name,
-          color: set.cards[0].color,
-          card_color: set.cards[0].card_color,
-          card_type: set.cards[0].card_type
-        });
-      }
-      return set.cards || [];
-    });
-    
-    console.log('Total cards found:', allCards.length);
-
-    // Transform the data to match our Card type
-    const transformedCards = allCards.map((card: any) => {
-      if (!card) {
-        console.warn('Found null card in data');
+    // Transform the data to match our Card type with proper enum values
+    const transformedCards = allCards.filter(Boolean).map((card): Card | null => {
+      // Handle colors array - take the first color if available
+      let color: CardColor;
+      if (card.colors.length > 0) {
+        const rawColor = card.colors[0].toLowerCase();
+        switch (rawColor) {
+          case 'red': color = CardColor.RED; break;
+          case 'blue': color = CardColor.BLUE; break;
+          case 'green': color = CardColor.GREEN; break;
+          case 'yellow': color = CardColor.YELLOW; break;
+          case 'purple': color = CardColor.PURPLE; break;
+          case 'black': color = CardColor.BLACK; break;
+          default:
+            console.warn(`Invalid color for card ${card.name}:`, rawColor);
+            return null;
+        }
+      } else {
+        console.warn(`No colors found for card ${card.name}`);
         return null;
       }
-      
-      // Log the raw card data
-      console.log('Raw card:', {
+
+      // Convert category to CardType enum
+      let type: CardType;
+      const rawType = card.category.toLowerCase();
+      switch (rawType) {
+        case 'leader': type = CardType.LEADER; break;
+        case 'character': type = CardType.CHARACTER; break;
+        case 'event': type = CardType.EVENT; break;
+        case 'stage': type = CardType.STAGE; break;
+        case 'don': type = CardType.DON; break;
+        default:
+          console.warn(`Invalid type for card ${card.name}:`, rawType);
+          return null;
+      }
+
+      const transformed: Card = {
         id: card.id,
         name: card.name,
-        color: card.color,
-        card_color: card.card_color,
-        card_type: card.card_type,
-        cost: card.cost,
-        power: card.power
-      });
-      
-      // Determine the card's color
-      const color = card.color || card.card_color || '';
-      console.log('Card color determination:', {
-        name: card.name,
         color: color,
-        rawColor: card.color,
-        rawCardColor: card.card_color
-      });
-      
-      const transformed = {
-        id: card.id || '',
-        name: card.name || '',
-        color: color.toLowerCase(),
-        type: (card.card_type || '').toLowerCase(),
-        cost: typeof card.cost === 'number' ? card.cost : 0,
-        power: card.power || null,
-        counter: card.counter || null,
-        attribute: card.attribute || '',
-        effect: card.effect_text || '',
-        trigger: card.trigger_text || '',
-        life: card.life || null,
-        rarity: card.rarity || '',
-        set_id: card.set_id || '',
-        card_number: card.card_number || '',
-        img_url: card.id ? `/data/en/images/${card.id}.png` : ''
+        type: type,
+        cost: card.cost,
+        power: card.power,
+        counter: card.counter,
+        attribute: card.attributes.join(', '),
+        effect: card.effect ?? '',
+        trigger: card.trigger ?? '',
+        life:  type == CardType.LEADER ? card.cost : 0,
+        rarity: card.rarity,
+        set_id: card.id.split('-')[0],
+        card_number: card.id.split('-')[1],
+        img_url: `/data/en/images/${card.id}.png`
       };
 
-      console.log('Transformed card:', transformed);
       return transformed;
-    }).filter(Boolean);
+    }).filter((card): card is Card => card !== null);
 
-    console.log('Final transformed cards length:', transformedCards.length);
+    console.log('Final transformed cards:', transformedCards.length);
     return transformedCards;
   } catch (error) {
     console.error('Error loading cards:', error);

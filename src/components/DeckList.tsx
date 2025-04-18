@@ -39,12 +39,12 @@ export default function DeckList() {
             <div className="mt-4">
               <h3 className="font-bold">Cards ({deck.cards.length}):</h3>
               <div className="grid grid-cols-4 gap-1 mt-2">
-                {deck.cards.map((cardId) => {
-                  const card = cardsData.find(c => c.id === cardId);
+                {deck.cards.map((currentCard) => {
+                  const card = cardsData.find(c => c.id === currentCard.id);
                   if (!card) return null;
                   return (
                     <img
-                      key={cardId}
+                      key={card.id}
                       src={card.img_url}
                       alt={card.name}
                       className="w-full"

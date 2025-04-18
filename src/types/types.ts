@@ -18,30 +18,30 @@ export enum CardType {
 export type CardRarity = 'common' | 'uncommon' | 'rare' | 'super_rare' | 'secret_rare';
 export type CardSet = string;
 
-export type Card = {
+export interface Card {
   id: string;
   name: string;
-  color: string;
-  type: string;
+  color: CardColor;
+  type: CardType;
   cost: number;
-  power?: number;
-  counter?: number;
-  attribute?: string;
-  effect?: string;
-  trigger?: string;
-  life?: number;
-  rarity?: string;
+  power: number | null;
+  counter: number | null;
+  attribute: string;
+  effect: string;
+  trigger: string;
+  life: number | null;
+  rarity: string;
   set_id: string;
   card_number: string;
   img_url: string;
-};
+}
 
-export type Deck = {
+export interface Deck {
   id: string;
   name: string;
   leader: Card;
   cards: Card[];
   createdAt: Date;
   updatedAt: Date;
-};
+}
 

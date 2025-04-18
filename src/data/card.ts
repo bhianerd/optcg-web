@@ -12,6 +12,7 @@ export const cardsData: Card[] = [
     effect: 'When attacking, +1000 power for each character you control.',
     img_url: 'https://placeholder.com/luffy.jpg',
     rarity: 'common',
-    set: 'base'
+    set_id: 'base',
+    card_number: '1',
   },
 ]

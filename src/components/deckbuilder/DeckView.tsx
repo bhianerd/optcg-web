@@ -15,9 +15,9 @@ const DeckView: React.FC<DeckViewProps> = ({ deck, onRemoveCard }) => {
     acc[cardId] = (acc[cardId] || 0) + 1;
     return acc;
   }, {});
-  const getCardById = (id: string): Card | s => {
+  const getCardById = (id: string): Card | undefined => {
     if (!allCards) return undefined;
-    return allCards?.find((card: Card) => card.id === id);
+    return allCards.find((card: Card) => card.id === id);
   };
 
   return (

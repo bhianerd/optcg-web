@@ -57,7 +57,7 @@ const applyFilters = (cards: Card[], state: DeckBuilderState): Card[] => {
     if (state.searchTerm) {
       const searchTerms = state.searchTerm.toLowerCase().split(' ').filter(Boolean);
       const cardText = `${card.name} ${card.effect} ${card.type} ${card.color}`.toLowerCase();
-      
+      console.log('Card text:', cardText);
       const matchesSearch = searchTerms.some(term => cardText.includes(term));
       if (!matchesSearch) {
         console.log('Card filtered by search:', card.name);
