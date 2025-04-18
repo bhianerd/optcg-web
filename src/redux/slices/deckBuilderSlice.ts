@@ -243,15 +243,15 @@ export const deckBuilderSlice = createSlice({
         
         // Cannot have more than 4 copies of a card (except don cards)
         if (card.type !== 'don') {
-          const cardCount = state.selectedDeck.cards.filter(card => card.id === cardId).length;
+          const cardCount = state.selectedDeck.cards.filter(id => id === cardId).length;
           if (cardCount >= 4) return;
         }
         
         // Leaders go in leader slot
         if (card.type === 'leader') {
-            state.selectedDeck.leader = card;
+          state.selectedDeck.leader = cardId;
         } else {
-          state.selectedDeck.cards.push(card);
+          state.selectedDeck.cards.push(cardId);
         }
       },
       
@@ -260,14 +260,14 @@ export const deckBuilderSlice = createSlice({
         
         if (!state.selectedDeck) return;
         
-        if (state.selectedDeck.leader?.id === cardId) {
+        if (state.selectedDeck.leader === cardId) {
           state.selectedDeck.leader = null;
         } else {
           // Find the index of the specific card instance to remove
           // This is important when there are multiple copies of the same card
           let foundCount = 0;
-          const indexToRemove = state.selectedDeck.cards.findIndex(card => {
-            if (card.id === cardId) {
+          const indexToRemove = state.selectedDeck.cards.findIndex(id => {
+            if (id === cardId) {
               if (foundCount === index) {
                 return true;
               }

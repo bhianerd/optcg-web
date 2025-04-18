@@ -11,6 +11,10 @@ export default defineConfig({
     open: true,
   },
 
+  css: {
+    postcss: './postcss.config.cjs',
+  },
+
   test: {
     root: import.meta.dirname,
     name: packageJson.name,

@@ -1,7 +1,24 @@
-export type CardColor = 'red' | 'blue' | 'green' | 'yellow' | 'purple' | 'black';
-export type CardType = 'leader' | 'character' | 'event' | 'stage' | 'don';
+export enum CardColor {
+  RED = 'red',
+  BLUE = 'blue',
+  GREEN = 'green',
+  YELLOW = 'yellow',
+  PURPLE = 'purple',
+  BLACK = 'black'
+}
 
-export interface Card {
+export enum CardType {
+  LEADER = 'leader',
+  CHARACTER = 'character',
+  EVENT = 'event',
+  STAGE = 'stage',
+  DON = 'don'
+}
+
+export type CardRarity = 'common' | 'uncommon' | 'rare' | 'super_rare' | 'secret_rare';
+export type CardSet = string;
+
+export type Card = {
     id: string;
     name: string;
     type: CardType;
@@ -9,15 +26,17 @@ export interface Card {
     img_url: string;
     power?: number;
     cost: number;
-    effect: string;  
-}
+    effect: string;
+    rarity: CardRarity;
+    set: CardSet;
+};
 
-export interface Deck {
+export type Deck = {
     id: string;
     name: string;
-    leader: Card | null;
-    cards: Card[];
+    leader: string | null;
+    cards: string[];
     createdAt: Date;
     updatedAt: Date;
-}
+};
 
