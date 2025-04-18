@@ -11,8 +11,10 @@ import {
 import type { RootState } from '../../redux/store';
 import type { Card, Deck } from '../../types/types';
 import { importDeck } from '../../utils/deckImporter';
+import { groupCards } from '../../utils/deckUtils';
 import CardFilters from '../CardFilters';
 import CardGrid from '../CardGrid';
+import StackedCardDisplay from '../StackedCardDisplay';
 
 const DeckBuilder: React.FC = () => {
   const dispatch = useDispatch();
@@ -78,7 +80,10 @@ const DeckBuilder: React.FC = () => {
     if (card.type.toLowerCase() === 'leader') {
       dispatch(setLeader(card));
     } else {
-      if (selectedDeck.cards.length < 50) {
+      // Count how many of this card are already in the deck
+      const cardCount = selectedDeck.cards.filter(c => c.id === card.id).length;
+      
+      if (cardCount < 4 && selectedDeck.cards.length < 50) {
         dispatch(addCard(card));
       }
     }
@@ -178,7 +183,7 @@ const DeckBuilder: React.FC = () => {
       {/* Main content area - Three columns */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
         {/* Left column - Card Preview */}
-        <div className="md:col-span-3 space-y-4">
+        <div className="md:col-span-2 space-y-4">
           <div className="bg-white rounded-lg shadow p-4">
             <h2 className="text-xl font-bold mb-4">Card Preview</h2>
             {hoveredCard ? (
@@ -214,7 +219,7 @@ const DeckBuilder: React.FC = () => {
         </div>
 
         {/* Middle column - Deck Preview */}
-        <div className="md:col-span-3">
+        <div className="md:col-span-5">
           {selectedDeck && (
             <div className="bg-white rounded-lg shadow p-4">
               <h2 className="text-xl font-bold mb-4">
@@ -231,18 +236,23 @@ const DeckBuilder: React.FC = () => {
                 </div>
               )}
               <h3 className="font-semibold mb-2">Cards</h3>
-              <CardGrid
-                cards={selectedDeck.cards}
-                onCardClick={(card) => dispatch(removeCard(card.id))}
-                onCardHover={setHoveredCard}
-                selectedCardIds={[]}
-              />
+              <div className="grid grid-cols-4 gap-4">
+                {groupCards(selectedDeck.cards).map(({ card, count }) => (
+                  <StackedCardDisplay
+                    key={card.id}
+                    card={card}
+                    count={count}
+                    onClick={() => dispatch(removeCard(card.id))}
+                    onHover={setHoveredCard}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>
 
         {/* Right column - Filters and Card Grid */}
-        <div className="md:col-span-6 space-y-4">
+        <div className="md:col-span-5 space-y-4">
           {/* Filters */}
           <div className="bg-white rounded-lg shadow">
             <CardFilters />
@@ -251,12 +261,14 @@ const DeckBuilder: React.FC = () => {
           {/* Available Cards */}
           <div className="bg-white rounded-lg shadow p-4">
             <h2 className="text-xl font-bold mb-4">Available Cards</h2>
-            <CardGrid
-              cards={filteredCards}
-              onCardClick={handleCardClick}
-              onCardHover={setHoveredCard}
-              selectedCardIds={selectedDeck?.cards.map(card => card.id) || []}
-            />
+            <div className="max-h-[calc(100vh-400px)] overflow-y-auto">
+              <CardGrid
+                cards={filteredCards}
+                onCardClick={handleCardClick}
+                onCardHover={setHoveredCard}
+                selectedCardIds={selectedDeck?.cards.map(card => card.id) || []}
+              />
+            </div>
           </div>
         </div>
       </div>
