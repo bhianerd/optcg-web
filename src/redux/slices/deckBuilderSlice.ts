@@ -2,7 +2,7 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import { cardsData } from '../../data/card';
-import type { Card, CardColor, CardType, Deck } from '../../types/types';
+import { Card, CardColor, CardType, Deck } from '../../types/types';
 
 // Add missing type definitions
 type CardRarity = 'common' | 'uncommon' | 'rare' | 'super_rare' | 'secret_rare';
@@ -242,14 +242,19 @@ export const deckBuilderSlice = createSlice({
         if (!card) return;
         
         // Cannot have more than 4 copies of a card (except don cards)
-        if (card.type !== 'don') {
+        if (card.type !== CardType.DON) {
           const cardCount = state.selectedDeck.cards.filter(id => id === cardId).length;
           if (cardCount >= 4) return;
         }
         
         // Leaders go in leader slot
-        if (card.type === 'leader') {
-          state.selectedDeck.leader = cardId;
+        if (card.type === CardType.LEADER) {
+          if (state.selectedDeck.leader) {
+            state.selectedDeck.leader.id = cardId;
+          } else {
+            console.error('No leader card found');
+            state.selectedDeck.leader = { id: cardId };
+          }
         } else {
           state.selectedDeck.cards.push(cardId);
         }
@@ -260,7 +265,7 @@ export const deckBuilderSlice = createSlice({
         
         if (!state.selectedDeck) return;
         
-        if (state.selectedDeck.leader === cardId) {
+        if (state.selectedDeck.leader?.id === cardId) {
           state.selectedDeck.leader = null;
         } else {
           // Find the index of the specific card instance to remove

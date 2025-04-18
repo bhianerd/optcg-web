@@ -15,9 +15,9 @@ const DeckView: React.FC<DeckViewProps> = ({ deck, onRemoveCard }) => {
     acc[cardId] = (acc[cardId] || 0) + 1;
     return acc;
   }, {});
-
-  const getCardById = (id: string): Card | undefined => {
-    return allCards.find((card: Card) => card.id === id);
+  const getCardById = (id: string): Card | s => {
+    if (!allCards) return undefined;
+    return allCards?.find((card: Card) => card.id === id);
   };
 
   return (
@@ -33,7 +33,7 @@ const DeckView: React.FC<DeckViewProps> = ({ deck, onRemoveCard }) => {
         {deck.leader ? (
           <div className="bg-gray-100 p-2 rounded">
             {(() => {
-              const leaderCard = getCardById(deck.leader);
+              const leaderCard = getCardById(deck.leader.id);
               return leaderCard ? <CardItem card={leaderCard} showAddButton={false} /> : null;
             })()}
           </div>

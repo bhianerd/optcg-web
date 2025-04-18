@@ -34,7 +34,7 @@ export type Card = {
 export type Deck = {
     id: string;
     name: string;
-    leader: string | null;
+    leader: Card | null;
     cards: string[];
     createdAt: Date;
     updatedAt: Date;
