@@ -1,39 +1,43 @@
-import Image from 'next/image';
-import React from 'react';
-import { Card } from '../types/types';
+import type { Card } from '../types/types';
 
-interface CardDisplayProps {
+type CardDisplayProps = {
   card: Card;
   onClick?: () => void;
   selected?: boolean;
-}
+};
 
-const CardDisplay: React.FC<CardDisplayProps> = ({ card, onClick, selected = false }) => {
+export default function CardDisplay({ card, onClick, selected = false }: CardDisplayProps) {
   return (
-    <div 
-      className={`relative rounded-lg overflow-hidden cursor-pointer transform transition-transform hover:scale-105 ${
-        selected ? 'ring-4 ring-blue-500' : ''
+    <div
+      className={`relative cursor-pointer transition-transform hover:scale-105 ${
+        selected ? 'ring-2 ring-blue-500' : ''
       }`}
       onClick={onClick}
     >
-      <div className="relative w-[240px] h-[334px]">
-        <Image
-          src={card.img_url}
-          alt={card.name}
-          fill
-          className="object-cover"
-          sizes="(max-width: 240px) 100vw, 240px"
-        />
+      <div className="aspect-[2.5/3.5] w-full overflow-hidden rounded-lg">
+        {card.img_url ? (
+          <img
+            src={card.img_url}
+            alt={card.name}
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              // Fallback to a placeholder image if the card image fails to load
+              (e.target as HTMLImageElement).src = '/placeholder-card.png';
+            }}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gray-200">
+            <span className="text-gray-500">No Image</span>
+          </div>
+        )}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white p-2">
-        <p className="font-semibold truncate">{card.name}</p>
-        <div className="flex justify-between text-sm">
-          <span>Cost: {card.cost}</span>
-          {card.power && <span>Power: {card.power}</span>}
+      <div className="mt-2 text-sm">
+        <div className="font-medium">{card.name}</div>
+        <div className="text-gray-500">
+          {typeof card.cost === 'number' && `Cost: ${String(card.cost)} `}
+          {typeof card.power === 'number' && `Power: ${String(card.power)}`}
         </div>
       </div>
     </div>
   );
-};
-
-export default CardDisplay; 
+} 

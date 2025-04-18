@@ -19,24 +19,29 @@ export type CardRarity = 'common' | 'uncommon' | 'rare' | 'super_rare' | 'secret
 export type CardSet = string;
 
 export type Card = {
-    id: string;
-    name: string;
-    type: CardType;
-    color: CardColor;
-    img_url: string;
-    power?: number;
-    cost: number;
-    effect: string;
-    rarity: CardRarity;
-    set: CardSet;
+  id: string;
+  name: string;
+  color: string;
+  type: string;
+  cost: number;
+  power?: number;
+  counter?: number;
+  attribute?: string;
+  effect?: string;
+  trigger?: string;
+  life?: number;
+  rarity?: string;
+  set_id: string;
+  card_number: string;
+  img_url: string;
 };
 
 export type Deck = {
-    id: string;
-    name: string;
-    leader: Card | null;
-    cards: string[];
-    createdAt: Date;
-    updatedAt: Date;
+  id: string;
+  name: string;
+  leader: Card;
+  cards: Card[];
+  createdAt: Date;
+  updatedAt: Date;
 };
 

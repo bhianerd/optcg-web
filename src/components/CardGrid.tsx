@@ -1,26 +1,24 @@
-import React from 'react';
-import { Card } from '../types/types';
+import type { Card } from '../types/types';
 import CardDisplay from './CardDisplay';
 
-interface CardGridProps {
+type CardGridProps = {
   cards: Card[];
-  onCardClick?: (card: Card) => void;
+  onCardClick: (card: Card) => void;
   selectedCardIds?: string[];
-}
+};
 
-const CardGrid: React.FC<CardGridProps> = ({ cards, onCardClick, selectedCardIds = [] }) => {
+export default function CardGrid({ cards, onCardClick, selectedCardIds = [] }: CardGridProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 p-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
       {cards.map((card) => (
-        <CardDisplay
-          key={card.id}
-          card={card}
-          onClick={() => onCardClick?.(card)}
-          selected={selectedCardIds.includes(card.id)}
-        />
+        <div key={card.id} className="flex justify-center">
+          <CardDisplay
+            card={card}
+            onClick={() => { onCardClick(card); }}
+            selected={selectedCardIds.includes(card.id)}
+          />
+        </div>
       ))}
     </div>
   );
-};
-
-export default CardGrid; 
+} 

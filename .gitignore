@@ -35,3 +35,4 @@ dist-ssr
 .env.*
 
 vegapull-records/
+public/
