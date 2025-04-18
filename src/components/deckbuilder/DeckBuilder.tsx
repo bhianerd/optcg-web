@@ -11,7 +11,7 @@ import {
 import type { RootState } from '../../redux/store';
 import type { Card, Deck } from '../../types/types';
 import { importDeck } from '../../utils/deckImporter';
-import { groupCards } from '../../utils/deckUtils';
+import { exportDeckToFormula, groupCards } from '../../utils/deckUtils';
 import CardFilters from '../CardFilters';
 import CardGrid from '../CardGrid';
 import StackedCardDisplay from '../StackedCardDisplay';
@@ -28,6 +28,7 @@ const DeckBuilder: React.FC = () => {
 
   const [hoveredCard, setHoveredCard] = useState<Card | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
 
@@ -71,6 +72,25 @@ const DeckBuilder: React.FC = () => {
     }
   };
 
+  const handleExportDeck = () => {
+    if (!selectedDeck) return;
+    setExportModalOpen(true);
+  };
+
+  const handleCopyToClipboard = async () => {
+    if (!selectedDeck) return;
+    
+    const formula = exportDeckToFormula(selectedDeck.leader, selectedDeck.cards);
+    
+    try {
+      await navigator.clipboard.writeText(formula);
+      // Close the modal after a short delay to show success
+      setTimeout(() => setExportModalOpen(false), 500);
+    } catch (err) {
+      console.error('Failed to copy to clipboard:', err);
+    }
+  };
+
   const handleCardClick = (card: Card) => {
     if (!selectedDeck) {
       handleCreateDeck();
@@ -107,7 +127,7 @@ const DeckBuilder: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-4">
-      {/* Create/Save/Import Deck buttons */}
+      {/* Create/Save/Import/Export Deck buttons */}
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex justify-between items-center">
           <div className="flex gap-4 items-center">
@@ -125,6 +145,12 @@ const DeckBuilder: React.FC = () => {
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                 >
                   Save Deck
+                </button>
+                <button
+                  onClick={handleExportDeck}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                  Export Deck
                 </button>
               </>
             ) : (
@@ -174,6 +200,35 @@ const DeckBuilder: React.FC = () => {
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
               >
                 Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Export Modal */}
+      {exportModalOpen && selectedDeck && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
+            <h2 className="text-xl font-bold mb-4">Export Deck</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Here's your deck formula. Click the button below to copy it to your clipboard.
+            </p>
+            <pre className="w-full h-64 p-2 border rounded-lg mb-4 font-mono overflow-auto bg-gray-50">
+              {exportDeckToFormula(selectedDeck.leader, selectedDeck.cards)}
+            </pre>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setExportModalOpen(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                Close
+              </button>
+              <button
+                onClick={handleCopyToClipboard}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+              >
+                Copy to Clipboard
               </button>
             </div>
           </div>

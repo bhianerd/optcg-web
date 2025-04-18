@@ -24,4 +24,21 @@ export function groupCards(cards: Card[]): StackedCard[] {
   });
   
   return stackedCards;
+}
+
+export function exportDeckToFormula(leader: Card | null, cards: Card[]): string {
+  const lines: string[] = [];
+  
+  // Add leader if present
+  if (leader) {
+    lines.push(`1x${leader.id}`);
+  }
+  
+  // Add other cards
+  const stackedCards = groupCards(cards);
+  stackedCards.forEach(({ card, count }) => {
+    lines.push(`${count}x${card.id}`);
+  });
+  
+  return lines.join('\n');
 } 
