@@ -3,6 +3,60 @@ import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import type { Card, CardColor, CardType, Deck } from '../../types/types';
 
+// Local storage key for saved decks
+const SAVED_DECKS_KEY = 'optcg_saved_decks';
+
+// Type guard to check if an object is a Deck
+const isDeck = (obj: unknown): obj is Deck => {
+  if (typeof obj !== 'object' || obj === null) return false;
+  
+  const deck = obj as Record<string, unknown>;
+  return (
+    typeof deck.id === 'string' &&
+    typeof deck.name === 'string' &&
+    Array.isArray(deck.cards) &&
+    typeof deck.createdAt === 'string' &&
+    typeof deck.updatedAt === 'string'
+  );
+};
+
+// Load saved decks from local storage
+const loadSavedDecks = (): Deck[] => {
+  try {
+    const savedDecks = localStorage.getItem(SAVED_DECKS_KEY);
+    if (!savedDecks) return [];
+    
+    const parsedDecks = JSON.parse(savedDecks) as unknown;
+    // Validate that the parsed data is an array of decks
+    if (!Array.isArray(parsedDecks)) return [];
+    
+    // Filter out any invalid deck objects and convert string dates to Date objects
+    return parsedDecks.filter(isDeck).map(deck => ({
+      ...deck,
+      createdAt: new Date(deck.createdAt),
+      updatedAt: new Date(deck.updatedAt)
+    }));
+  } catch (error) {
+    console.error('Error loading saved decks:', error);
+    return [];
+  }
+};
+
+// Save decks to local storage
+const saveDecksToStorage = (decks: Deck[]) => {
+  try {
+    // Convert Date objects to ISO strings for storage
+    const decksToStore = decks.map(deck => ({
+      ...deck,
+      createdAt: deck.createdAt.toISOString(),
+      updatedAt: deck.updatedAt.toISOString()
+    }));
+    localStorage.setItem(SAVED_DECKS_KEY, JSON.stringify(decksToStore));
+  } catch (error) {
+    console.error('Error saving decks:', error);
+  }
+};
+
 type Filters = {
   colors: CardColor[];
   types: CardType[];
@@ -26,7 +80,7 @@ const initialState: DeckBuilderState = {
   allCards: [],
   filteredCards: [],
   selectedDeck: null,
-  savedDecks: [],
+  savedDecks: loadSavedDecks(),
   searchTerm: '',
   filters: {
     colors: [],
@@ -204,11 +258,24 @@ export const deckBuilderSlice = createSlice({
       }
     },
     saveDeck: (state, action: PayloadAction<Deck>) => {
-      const existingIndex = state.savedDecks.findIndex(deck => deck.id === action.payload.id);
+      const deckToSave = {
+        ...action.payload,
+        updatedAt: new Date()
+      };
+      
+      const existingIndex = state.savedDecks.findIndex(deck => deck.id === deckToSave.id);
       if (existingIndex >= 0) {
-        state.savedDecks[existingIndex] = action.payload;
+        state.savedDecks[existingIndex] = deckToSave;
       } else {
-        state.savedDecks.push(action.payload);
+        state.savedDecks.push(deckToSave);
+      }
+      
+      // Save to local storage after updating state
+      saveDecksToStorage(state.savedDecks);
+      
+      // If this is the currently selected deck, update it too
+      if (state.selectedDeck?.id === deckToSave.id) {
+        state.selectedDeck = deckToSave;
       }
     },
     deleteDeck: (state, action: PayloadAction<string>) => {
@@ -216,6 +283,8 @@ export const deckBuilderSlice = createSlice({
       if (state.selectedDeck?.id === action.payload) {
         state.selectedDeck = null;
       }
+      // Save to local storage after updating state
+      saveDecksToStorage(state.savedDecks);
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.isLoading = action.payload;

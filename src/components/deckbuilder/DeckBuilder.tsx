@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
     addCard,
+    deleteDeck,
     removeCard,
     saveDeck,
     setDeckName,
@@ -22,6 +23,7 @@ const DeckBuilder: React.FC = () => {
     filteredCards,
     selectedDeck,
     allCards,
+    savedDecks,
     isLoading,
     error
   } = useSelector((state: RootState) => state.deckBuilder);
@@ -31,6 +33,7 @@ const DeckBuilder: React.FC = () => {
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [importText, setImportText] = useState('');
   const [importError, setImportError] = useState<string | null>(null);
+  const [showSavedDecks, setShowSavedDecks] = useState(false);
 
   const handleCreateDeck = () => {
     const newDeck: Deck = {
@@ -42,6 +45,7 @@ const DeckBuilder: React.FC = () => {
       updatedAt: new Date()
     };
     dispatch(setSelectedDeck(newDeck));
+    dispatch(saveDeck(newDeck));
   };
 
   const handleImportDeck = async () => {
@@ -65,6 +69,7 @@ const DeckBuilder: React.FC = () => {
       };
       
       dispatch(setSelectedDeck(newDeck));
+      dispatch(saveDeck(newDeck));
       setImportModalOpen(false);
       setImportText('');
     } catch (error) {
@@ -115,6 +120,33 @@ const DeckBuilder: React.FC = () => {
     }
   };
 
+  const handleLoadDeck = (deck: Deck) => {
+    dispatch(setSelectedDeck(deck));
+    setShowSavedDecks(false);
+  };
+
+  const handleDeleteDeck = (deckId: string) => {
+    if (window.confirm('Are you sure you want to delete this deck?')) {
+      dispatch(deleteDeck(deckId));
+    }
+  };
+
+  const handleSaveAs = () => {
+    if (!selectedDeck) return;
+    
+    const newDeck: Deck = {
+      id: crypto.randomUUID(),
+      name: `${selectedDeck.name} (Copy)`,
+      leader: selectedDeck.leader,
+      cards: [...selectedDeck.cards],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    dispatch(setSelectedDeck(newDeck));
+    dispatch(saveDeck(newDeck));
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -153,6 +185,12 @@ const DeckBuilder: React.FC = () => {
                   Save Deck
                 </button>
                 <button
+                  onClick={handleSaveAs}
+                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+                >
+                  Save As New Deck
+                </button>
+                <button
                   onClick={handleExportDeck}
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                 >
@@ -173,13 +211,68 @@ const DeckBuilder: React.FC = () => {
             >
               Import Deck
             </button>
+            <button
+              onClick={() => setShowSavedDecks(!showSavedDecks)}
+              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
+            >
+              {showSavedDecks ? 'Hide Saved Decks' : 'Show Saved Decks'}
+            </button>
           </div>
         </div>
       </div>
 
+      {/* Saved Decks Modal */}
+      {showSavedDecks && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <h2 className="text-xl font-bold mb-4">Saved Decks</h2>
+            {savedDecks.length === 0 ? (
+              <p className="text-gray-500">No saved decks found.</p>
+            ) : (
+              <div className="space-y-4">
+                {savedDecks.map(deck => (
+                  <div key={deck.id} className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="font-bold">{deck.name}</h3>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleLoadDeck(deck)}
+                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                        >
+                          Load
+                        </button>
+                        <button
+                          onClick={() => handleDeleteDeck(deck.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p>Cards: {deck.cards.length}/50</p>
+                      <p>Leader: {deck.leader?.name || 'None'}</p>
+                      <p>Last Updated: {new Date(deck.updatedAt).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={() => setShowSavedDecks(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Import Modal */}
       {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
             <h2 className="text-xl font-bold mb-4">Import Deck</h2>
             <p className="text-sm text-gray-600 mb-4">
@@ -214,7 +307,7 @@ const DeckBuilder: React.FC = () => {
 
       {/* Export Modal */}
       {exportModalOpen && selectedDeck && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
             <h2 className="text-xl font-bold mb-4">Export Deck</h2>
             <p className="text-sm text-gray-600 mb-4">
@@ -242,7 +335,7 @@ const DeckBuilder: React.FC = () => {
       )}
 
       {/* Main content area - Three columns */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-4 relative">
         {/* Left column - Card Preview */}
         <div className="md:col-span-2 space-y-4">
           <div className="bg-white rounded-lg shadow p-4">
