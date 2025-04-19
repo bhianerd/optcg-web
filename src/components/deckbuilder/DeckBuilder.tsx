@@ -100,8 +100,14 @@ const DeckBuilder: React.FC = () => {
     if (card.type.toLowerCase() === 'leader') {
       dispatch(setLeader(card));
     } else {
-      // Count how many of this card are already in the deck
-      const cardCount = selectedDeck.cards.filter(c => c.id === card.id).length;
+      // Get the base card ID (without promo suffixes)
+      const baseCardId = card.id.split('_')[0];
+      
+      // Count how many cards with the same base ID are already in the deck
+      const cardCount = selectedDeck.cards.filter(c => {
+        const cBaseId = c.id.split('_')[0];
+        return cBaseId === baseCardId;
+      }).length;
       
       if (cardCount < 4 && selectedDeck.cards.length < 50) {
         dispatch(addCard(card));
