@@ -102,6 +102,13 @@ const Game: React.FC<GameProps> = ({ playerDeck, opponentDeck }) => {
     setPlayerDeckRemaining(remainingDeck);
   };
 
+  // Handle shuffling the deck
+  const handleShuffleDeck = () => {
+    if (!isPlayerTurn) return;
+
+    setPlayerDeckRemaining(prev => [...prev].sort(() => Math.random() - 0.5));
+  };
+
   // Start game when component mounts
   React.useEffect(() => {
     initializeGame();
@@ -128,6 +135,7 @@ const Game: React.FC<GameProps> = ({ playerDeck, opponentDeck }) => {
           onCardActivate={handleCardActivate}
           onDonAttach={handleDonAttach}
           onDeckClick={handleDrawCard}
+          onDeckShuffle={handleShuffleDeck}
         />
       </div>
     </div>
