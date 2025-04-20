@@ -21,6 +21,7 @@ const Game: React.FC<GameProps> = ({ playerDeck, opponentDeck }) => {
   const [opponentLife, setOpponentLife] = useState<Card[]>([]);
   const [counters, setCounters] = useState(0);
   const [isPlayerTurn, setIsPlayerTurn] = useState(true);
+  const [isViewingTrash, setIsViewingTrash] = useState(false);
   const [playerDeckRemaining, setPlayerDeckRemaining] = useState<Card[]>([]);
   const [opponentDeckRemaining, setOpponentDeckRemaining] = useState<Card[]>([]);
 
@@ -30,33 +31,39 @@ const Game: React.FC<GameProps> = ({ playerDeck, opponentDeck }) => {
     const shuffledPlayerDeck = [...playerDeck.cards].sort(() => Math.random() - 0.5);
     const shuffledOpponentDeck = [...opponentDeck.cards].sort(() => Math.random() - 0.5);
 
+    // Add instanceId to cards
+    const addInstanceId = (card: Card) => ({
+      ...card,
+      instanceId: `${card.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    });
+
     // Draw starting hands (5 cards)
-    setPlayerHand(shuffledPlayerDeck.slice(0, 5));
-    setOpponentHand(shuffledOpponentDeck.slice(0, 5));
+    setPlayerHand(shuffledPlayerDeck.slice(0, 5).map(addInstanceId));
+    setOpponentHand(shuffledOpponentDeck.slice(0, 5).map(addInstanceId));
 
     // Set up life (5 cards)
-    setPlayerLife(shuffledPlayerDeck.slice(5, 10));
-    setOpponentLife(shuffledOpponentDeck.slice(5, 10));
+    setPlayerLife(shuffledPlayerDeck.slice(5, 10).map(addInstanceId));
+    setOpponentLife(shuffledOpponentDeck.slice(5, 10).map(addInstanceId));
 
     // Set up Don decks (10 cards)
     setPlayerDonDeck(Array(10).fill({} as Card));
     setOpponentDonDeck(Array(10).fill({} as Card));
 
     // Set up fields with leaders
-    setPlayerField([playerDeck.leader]);
-    setOpponentField([opponentDeck.leader]);
+    setPlayerField([addInstanceId(playerDeck.leader)]);
+    setOpponentField([addInstanceId(opponentDeck.leader)]);
 
     // Store remaining deck cards
-    setPlayerDeckRemaining(shuffledPlayerDeck.slice(10));
-    setOpponentDeckRemaining(shuffledOpponentDeck.slice(10));
+    setPlayerDeckRemaining(shuffledPlayerDeck.slice(10).map(addInstanceId));
+    setOpponentDeckRemaining(shuffledOpponentDeck.slice(10).map(addInstanceId));
   };
 
   // Handle playing a card
   const handleCardPlay = (card: Card, zone: string) => {
     if (!isPlayerTurn) return;
 
-    // Remove card from hand
-    setPlayerHand(prev => prev.filter(c => c.id !== card.id));
+    // Remove card from hand using instanceId
+    setPlayerHand(prev => prev.filter(c => c.instanceId !== card.instanceId));
 
     // Add card to appropriate zone
     if (zone === 'field') {
@@ -109,6 +116,31 @@ const Game: React.FC<GameProps> = ({ playerDeck, opponentDeck }) => {
     setPlayerDeckRemaining(prev => [...prev].sort(() => Math.random() - 0.5));
   };
 
+  // Handle moving a card to trash
+  const handleMoveToTrash = (card: Card) => {
+    if (!isPlayerTurn) return;
+
+    // Remove from hand using instanceId
+    setPlayerHand(prev => prev.filter(c => c.instanceId !== card.instanceId));
+    
+    // Remove from field using instanceId
+    setPlayerField(prev => prev.filter(c => c.instanceId !== card.instanceId));
+    
+    // Add to trash
+    setPlayerTrash(prev => [...prev, card]);
+  };
+
+  // Handle viewing trash
+  const handleViewTrash = () => {
+    console.log('Opening trash view, current trash:', playerTrash);
+    setIsViewingTrash(true);
+  };
+
+  // Handle closing trash view
+  const handleCloseTrash = () => {
+    setIsViewingTrash(false);
+  };
+
   // Start game when component mounts
   React.useEffect(() => {
     initializeGame();
@@ -130,12 +162,16 @@ const Game: React.FC<GameProps> = ({ playerDeck, opponentDeck }) => {
           life={playerLife}
           counters={counters}
           isPlayerTurn={isPlayerTurn}
+          isViewingTrash={isViewingTrash}
           onCardPlay={handleCardPlay}
+          onMoveToTrash={handleMoveToTrash}
           onCardAttack={handleCardAttack}
           onCardActivate={handleCardActivate}
           onDonAttach={handleDonAttach}
           onDeckClick={handleDrawCard}
           onDeckShuffle={handleShuffleDeck}
+          onViewTrash={handleViewTrash}
+          onCloseTrash={handleCloseTrash}
         />
       </div>
     </div>
