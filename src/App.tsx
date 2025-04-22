@@ -1,6 +1,6 @@
 import { Provider } from 'react-redux';
 import CardDataProvider from './components/CardDataProvider';
-import Game from './components/game/Game';
+import TestGame from './components/game/TestGame';
 import { store } from './redux/store';
 import { CardColor, CardType, type Card, type Deck } from './types/types';
 
@@ -97,9 +97,7 @@ function App() {
   return (
     <Provider store={store}>
       <CardDataProvider />
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-        <Game playerDeck={testDeck} opponentDeck={testDeck} />
-      </div>
+      <TestGame />
     </Provider>
   );
 }
