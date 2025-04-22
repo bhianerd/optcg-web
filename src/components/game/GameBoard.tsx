@@ -13,6 +13,7 @@ type GameBoardProps = {
   characterField: Card[];
   donField: Card[];
   stageCard?: Card;
+  life: Card[];  // Add life cards
   
   // Player 2 (top player)
   player2Deck: Card[];
@@ -22,6 +23,7 @@ type GameBoardProps = {
   player2CharacterField: Card[];
   player2DonField: Card[];
   player2StageCard?: Card;
+  player2Life: Card[];  // Add player 2 life cards
 
   isPlayerTurn: boolean;
   onCardPlay: (card: Card, zone: string) => void;
@@ -42,6 +44,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   characterField,
   donField,
   stageCard,
+  life,
   
   // Player 2
   player2Deck,
@@ -51,6 +54,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   player2CharacterField,
   player2DonField,
   player2StageCard,
+  player2Life,
 
   isPlayerTurn,
   onCardPlay,
@@ -149,158 +153,152 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       {/* Game board section */}
       <div className="flex-1 p-8 bg-gray-900">
-        <div className="relative w-full h-full rounded-lg border border-gray-700">
-          {/* Player 2 (Top) Section */}
-          <div className="absolute top-4 left-4 right-4 space-y-4">
-            {/* Player 2 Don Field */}
-            <div className="flex items-center gap-4">
-              <div className="w-32">
-                <CardComponent isFaceDown />
-                <span className="text-white text-sm mt-1 block">P2 Deck</span>
-              </div>
-              <div className="flex-1 h-32 border border-gray-600 rounded-lg">
-                <span className="text-white text-sm">P2 Don Field</span>
-              </div>
-              <div className="w-32">
-                <CardComponent isFaceDown />
-                <span className="text-white text-sm mt-1 block">P2 Don Deck</span>
-              </div>
-            </div>
+        <div className="grid grid-cols-6 gap-4 w-full max-w-[1200px] mx-auto">
+          {/* Row 1: Player 2 Don Field (A1-F1) */}
+          <div className="col-span-6 h-32 border border-gray-600 rounded-lg">
+            <span className="text-white text-sm">Player 2 Don Field</span>
+          </div>
 
-            {/* Player 2 Character Field */}
-            <div className="flex items-center gap-4">
-              <div className="w-32">
-                <CardComponent isFaceDown />
-                <span className="text-white text-sm mt-1 block">P2 Trash</span>
-              </div>
-              <div className="w-32">
-                <CardComponent isFaceDown />
-                <span className="text-white text-sm mt-1 block">P2 Stage</span>
-              </div>
-              <div className="flex-1 h-32 border border-gray-600 rounded-lg">
-                <span className="text-white text-sm">P2 Character Field</span>
-              </div>
-              <div className="w-32">
-                <CardComponent isFaceDown />
-                <span className="text-white text-sm mt-1 block">P2 Leader</span>
-              </div>
+          {/* Row 2: Player 2 Deck (A2), Trash (B2), Stage (C2), Leader (D2), Life (F2-F3) */}
+          <div className="w-32"> {/* A2 */}
+            <CardComponent isFaceDown />
+            <span className="text-white text-sm mt-1 block">P2 Deck</span>
+          </div>
+          <div className="w-32"> {/* B2 */}
+            <CardComponent isFaceDown />
+            <span className="text-white text-sm mt-1 block">P2 Trash</span>
+          </div>
+          <div className="w-32"> {/* C2 */}
+            <CardComponent isFaceDown />
+            <span className="text-white text-sm mt-1 block">P2 Stage</span>
+          </div>
+          <div className="w-32"> {/* D2 */}
+            {player2Leader ? (
+              <CardComponent card={player2Leader} />
+            ) : (
+              <div className="w-32 h-44 border-2 border-dashed border-gray-600 rounded-lg" />
+            )}
+            <span className="text-white text-sm mt-1 block">P2 Leader</span>
+          </div>
+          <div className="w-32"></div> {/* E2 - Empty cell */}
+          <div className="row-span-2"> {/* F2-F3 */}
+            <div className="h-full border border-gray-600 rounded-lg">
+              <span className="text-white text-sm">P2 Life ({player2Life.length})</span>
             </div>
           </div>
 
-          {/* Player 1 (Bottom) Section */}
-          <div className="absolute bottom-4 left-4 right-4 space-y-4">
-            {/* Player 1 Character Field */}
-            <div className="flex items-center gap-4">
-              <div className="w-32">
-                {leader ? (
-                  <CardOptions
-                    card={leader}
-                    isSelected={selectedCard?.id === leader.id}
-                    isTapped={tappedCards.has(leader.id)}
-                    onTap={() => handleTapCard(leader.id)}
-                    onUntap={() => handleUntapCard(leader.id)}
-                    onTrash={() => onMoveToTrash(leader)}
-                    onHover={() => handleCardHover(leader)}
-                    onMouseLeave={() => handleCardHover(null)}
-                  />
-                ) : (
-                  <div className="w-32 h-44 border-2 border-dashed border-gray-600 rounded-lg" />
-                )}
-                <span className="text-white text-sm mt-1 block">Leader</span>
-              </div>
-              <div className="flex-1 h-44 border border-gray-600 rounded-lg p-2">
-                <div className="flex gap-2 h-full">
-                  {characterField.map((card, index) => (
-                    <div key={card.instanceId || index} className="w-32">
-                      <CardOptions
-                        card={card}
-                        isSelected={selectedCard?.id === card.id}
-                        isTapped={tappedCards.has(card.id)}
-                        onTap={() => handleTapCard(card.id)}
-                        onUntap={() => handleUntapCard(card.id)}
-                        onTrash={() => onMoveToTrash(card)}
-                        onHover={() => handleCardHover(card)}
-                        onMouseLeave={() => handleCardHover(null)}
-                      />
-                    </div>
-                  ))}
-                </div>
-                <span className="text-white text-sm">Character Field</span>
-              </div>
-              <div className="w-32">
-                <CardComponent isFaceDown />
-                <span className="text-white text-sm mt-1 block">Stage</span>
-              </div>
-              <div className="w-32">
-                <div 
-                  className="cursor-pointer"
-                  onClick={onViewTrash}
-                >
-                  {trash.length > 0 ? (
-                    <div 
-                      className="relative"
-                      onMouseEnter={() => handleCardHover(trash[trash.length - 1])}
-                      onMouseLeave={() => handleCardHover(null)}
-                    >
-                      <CardComponent card={trash[trash.length - 1]} />
-                      {trash.length > 1 && (
-                        <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-2 py-1 rounded-full text-xs">
-                          +{trash.length - 1}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <CardComponent isFaceDown />
-                  )}
-                </div>
-                <span className="text-white text-sm mt-1 block">Trash ({trash.length})</span>
-              </div>
+          {/* Row 3: Player 2 Character Field (A3-E3) */}
+          {[...Array(5)].map((_, index) => (
+            <div key={`p2-char-${index}`} className="w-32 h-44 border border-gray-600 rounded-lg">
+              {player2CharacterField[index] && (
+                <CardComponent card={player2CharacterField[index]} />
+              )}
             </div>
+          ))}
+          {/* F3 is part of the Life span from above */}
 
-            {/* Player 1 Don Field */}
-            <div className="flex items-center gap-4">
-              <div className="w-32">
+          {/* Row 4: Empty Divider */}
+          <div className="col-span-6 h-8" />
+
+          {/* Row 5: Player 1 Life (A5-A6) and Character Field (B5-F5) */}
+          <div className="row-span-2"> {/* A5-A6 */}
+            <div className="h-full border border-gray-600 rounded-lg">
+              <span className="text-white text-sm">Life ({life.length})</span>
+            </div>
+          </div>
+          {[...Array(5)].map((_, index) => (
+            <div key={`p1-char-${index}`} className="w-32 h-44 border border-gray-600 rounded-lg">
+              {characterField[index] && (
+                <CardOptions
+                  card={characterField[index]}
+                  isSelected={selectedCard?.id === characterField[index].id}
+                  isTapped={tappedCards.has(characterField[index].id)}
+                  onTap={() => handleTapCard(characterField[index].id)}
+                  onUntap={() => handleUntapCard(characterField[index].id)}
+                  onTrash={() => onMoveToTrash(characterField[index])}
+                  onHover={() => handleCardHover(characterField[index])}
+                  onMouseLeave={() => handleCardHover(null)}
+                />
+              )}
+            </div>
+          ))}
+
+          {/* Row 6: Empty (A6 - part of Life), Empty (B6), Deck (C6), Trash (D6), Stage (E6), Leader (F6) */}
+          <div className="w-32"></div> {/* B6 - Empty cell */}
+          <div className="w-32 cursor-pointer" onClick={onDrawCard}> {/* C6 */}
+            {deck.length > 0 ? (
+              <div className="relative">
                 <CardComponent isFaceDown />
-                <span className="text-white text-sm mt-1 block">Don Deck</span>
+                <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-2 py-1 rounded-full text-xs">
+                  {deck.length}
+                </div>
               </div>
-              <div className="flex-1 h-32 border border-gray-600 rounded-lg">
-                <span className="text-white text-sm">Don Field</span>
+            ) : (
+              <div className="w-32 h-44 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center">
+                <span className="text-gray-500 text-sm">Empty</span>
               </div>
-              <div className="w-32 cursor-pointer" onClick={onDrawCard}>
-                {deck.length > 0 ? (
-                  <div className="relative">
-                    <CardComponent isFaceDown />
-                    <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-2 py-1 rounded-full text-xs">
-                      {deck.length}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="w-32 h-44 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center">
-                    <span className="text-gray-500 text-sm">Empty</span>
+            )}
+            <span className="text-white text-sm mt-1 block">Deck</span>
+          </div>
+          <div className="w-32 cursor-pointer" onClick={onViewTrash}> {/* D6 */}
+            {trash.length > 0 ? (
+              <div className="relative">
+                <CardComponent card={trash[trash.length - 1]} />
+                {trash.length > 1 && (
+                  <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-2 py-1 rounded-full text-xs">
+                    +{trash.length - 1}
                   </div>
                 )}
-                <span className="text-white text-sm mt-1 block">Deck ({deck.length})</span>
               </div>
-            </div>
+            ) : (
+              <CardComponent isFaceDown />
+            )}
+            <span className="text-white text-sm mt-1 block">Trash ({trash.length})</span>
+          </div>
+          <div className="w-32"> {/* E6 */}
+            <CardComponent isFaceDown />
+            <span className="text-white text-sm mt-1 block">Stage</span>
+          </div>
+          <div className="w-32"> {/* F6 */}
+            {leader ? (
+              <CardOptions
+                card={leader}
+                isSelected={selectedCard?.id === leader.id}
+                isTapped={tappedCards.has(leader.id)}
+                onTap={() => handleTapCard(leader.id)}
+                onUntap={() => handleUntapCard(leader.id)}
+                onTrash={() => onMoveToTrash(leader)}
+                onHover={() => handleCardHover(leader)}
+                onMouseLeave={() => handleCardHover(null)}
+              />
+            ) : (
+              <div className="w-32 h-44 border-2 border-dashed border-gray-600 rounded-lg" />
+            )}
+            <span className="text-white text-sm mt-1 block">Leader</span>
+          </div>
 
-            {/* Player Hand */}
-            <div className="absolute -bottom-24 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
-              {hand.map((card, index) => (
-                <div 
-                  key={card.instanceId || index} 
-                  className="w-32 h-44 transition-transform hover:-translate-y-6"
-                >
-                  <CardOptions
-                    card={card}
-                    isSelected={selectedCard?.id === card.id}
-                    onPlay={() => handleCardPlay(card)}
-                    onTrash={() => onMoveToTrash(card)}
-                    onHover={() => handleCardHover(card)}
-                    onMouseLeave={() => handleCardHover(null)}
-                  />
-                </div>
-              ))}
-            </div>
+          {/* Row 7: Player 1 Don Field (A7-F7) */}
+          <div className="col-span-6 h-32 border border-gray-600 rounded-lg">
+            <span className="text-white text-sm">Don Field</span>
+          </div>
+
+          {/* Player Hand */}
+          <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2">
+            {hand.map((card, index) => (
+              <div 
+                key={card.instanceId || index} 
+                className="w-32 h-44 transition-transform hover:-translate-y-6"
+              >
+                <CardOptions
+                  card={card}
+                  isSelected={selectedCard?.id === card.id}
+                  onPlay={() => handleCardPlay(card)}
+                  onTrash={() => onMoveToTrash(card)}
+                  onHover={() => handleCardHover(card)}
+                  onMouseLeave={() => handleCardHover(null)}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </div>

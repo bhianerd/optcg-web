@@ -10,7 +10,11 @@ const TestGame: React.FC = () => {
   const [donField, setDonField] = useState<Card[]>([]);
   const [donDeck, setDonDeck] = useState<Card[]>([]);
   const [trash, setTrash] = useState<Card[]>([]);
+  const [life, setLife] = useState<Card[]>([]);
   const [isViewingTrash, setIsViewingTrash] = useState(false);
+
+  // Player 2 state
+  const [player2Life, setPlayer2Life] = useState<Card[]>([]);
 
   useEffect(() => {
     // Load deck from localStorage
@@ -33,11 +37,15 @@ const TestGame: React.FC = () => {
         // Set up initial hand (5 cards)
         setHand(shuffledDeck.slice(0, 5).map(addInstanceId));
         
+        // Set up life cards (5 cards)
+        setLife(shuffledDeck.slice(5, 10).map(addInstanceId));
+        setPlayer2Life(Array(5).fill(null)); // Initialize opponent's life cards
+        
         // Set leader
         setLeader(addInstanceId(selectedDeck.leader));
         
         // Set remaining deck
-        setDeck(shuffledDeck.slice(5).map(addInstanceId));
+        setDeck(shuffledDeck.slice(10).map(addInstanceId));
         
         // Initialize empty don deck with 10 cards
         setDonDeck(Array(10).fill(null));
@@ -98,6 +106,7 @@ const TestGame: React.FC = () => {
         characterField={characterField}
         donField={donField}
         stageCard={undefined}
+        life={life}
         player2Deck={[]}
         player2DonDeck={[]}
         player2Trash={[]}
@@ -105,6 +114,7 @@ const TestGame: React.FC = () => {
         player2CharacterField={[]}
         player2DonField={[]}
         player2StageCard={undefined}
+        player2Life={player2Life}
         isPlayerTurn={true}
         onCardPlay={handleCardPlay}
         onMoveToTrash={handleMoveToTrash}
