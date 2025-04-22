@@ -64,7 +64,7 @@ const CardOptions: React.FC<CardOptionsProps> = ({
 
       {/* Options menu */}
       {showOptions && (
-        <div className="absolute left-full ml-2 top-0 bg-white rounded-lg shadow-lg p-2 z-50 w-32">
+        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 -translate-y-full bg-white rounded-lg shadow-lg p-2 z-50 w-32">
           {onPlay && (
             <button
               onClick={(e) => {

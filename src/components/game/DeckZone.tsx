@@ -30,7 +30,7 @@ const DeckZone: React.FC<DeckZoneProps> = ({
 
       {/* Dropdown menu */}
       {showOptions && deck.length > 0 && (
-        <div className="absolute left-full ml-2 top-0 bg-white rounded-lg shadow-lg p-2 z-50 w-32">
+        <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 -translate-y-full bg-white rounded-lg shadow-lg p-2 z-50 w-32">
           <button
             onClick={onDraw}
             className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
