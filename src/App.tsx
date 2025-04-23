@@ -1,7 +1,7 @@
-import { Provider } from 'react-redux';
-import CardDataProvider from './components/CardDataProvider';
+import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import DeckEditor from './components/deck/DeckEditor';
 import TestGame from './components/game/TestGame';
-import { store } from './redux/store';
+import MenuPage from './components/menu/MenuPage';
 import { CardColor, CardType, type Card, type Deck } from './types/types';
 
 // Type for a potential deck object from storage
@@ -61,7 +61,7 @@ function App() {
     attribute: 'Straw Hat Crew',
     effect: 'When this character attacks, draw 1 card.',
     trigger: '',
-    life: null,
+    life: undefined,
     rarity: 'common',
     set_id: 'OP01',
     card_number: '002',
@@ -83,7 +83,7 @@ function App() {
       attribute: 'Straw Hat Crew',
       effect: 'This Leader cannot be KO\'d by effects.',
       trigger: '',
-      life: null,
+      life: undefined,
       rarity: 'super_rare',
       set_id: 'OP01',
       card_number: '001',
@@ -95,10 +95,21 @@ function App() {
   };
 
   return (
-    <Provider store={store}>
-      <CardDataProvider />
-      <TestGame />
-    </Provider>
+    <Router>
+      <Routes>
+        {/* Redirect root to menu */}
+        <Route path="/" element={<Navigate to="/menu" replace />} />
+        
+        {/* Main menu */}
+        <Route path="/menu" element={<MenuPage />} />
+        
+        {/* Deck editor */}
+        <Route path="/deck-editor" element={<DeckEditor />} />
+        
+        {/* Game board */}
+        <Route path="/game" element={<TestGame />} />
+      </Routes>
+    </Router>
   );
 }
 
