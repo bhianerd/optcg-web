@@ -99,34 +99,6 @@ const GameBoard: React.FC<GameBoardProps> = ({
     setTappedCards(newTappedCards);
   };
 
-  // Trash view component
-  const TrashView = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 p-6 rounded-lg w-[80vw] h-[80vh] flex flex-col relative">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-white text-xl font-bold">Trash ({trash.length} cards)</h2>
-          <button 
-            onClick={onCloseTrash}
-            className="text-white hover:text-gray-300"
-          >
-            Close
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4">
-          {trash.map((card, index) => (
-            <div key={card.instanceId || index} className="w-full aspect-[5/7]">
-              <CardOptions
-                card={card}
-                onHover={() => handleCardHover(card)}
-                onMouseLeave={() => handleCardHover(null)}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="min-h-screen w-full flex flex-col lg:flex-row">
       {/* Card preview section - hidden on mobile/tablet, original size on desktop */}
@@ -162,21 +134,59 @@ const GameBoard: React.FC<GameBoardProps> = ({
             </div>
 
             {/* Row 2: Player 2 Deck (A2), Trash (B2), Stage (C2), Leader (D2), Life (F2-F3) */}
-            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44"> {/* A2 */}
-              <CardComponent isFaceDown />
+            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg"> {/* A2 */}
+              <div className="relative w-full h-full">
+                <CardComponent 
+                  isFaceDown 
+                  onHover={() => handleCardHover(player2Deck[player2Deck.length - 1])}
+                  onMouseLeave={() => handleCardHover(null)}
+                />
+                {player2Deck.length > 0 && (
+                  <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-1 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs">
+                    {player2Deck.length}
+                  </div>
+                )}
+              </div>
               <span className="text-white text-[10px] lg:text-sm mt-0.5 lg:mt-1 block">P2 Deck</span>
             </div>
-            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44"> {/* B2 */}
-              <CardComponent isFaceDown />
+            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg"> {/* B2 */}
+              <div className="relative w-full h-full">
+                {player2Trash.length > 0 ? (
+                  <CardComponent 
+                    card={player2Trash[player2Trash.length - 1]}
+                    onHover={() => handleCardHover(player2Trash[player2Trash.length - 1])}
+                    onMouseLeave={() => handleCardHover(null)}
+                  />
+                ) : (
+                  <CardComponent isFaceDown />
+                )}
+                {player2Trash.length > 1 && (
+                  <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-1 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs">
+                    +{player2Trash.length - 1}
+                  </div>
+                )}
+              </div>
               <span className="text-white text-[10px] lg:text-sm mt-0.5 lg:mt-1 block">P2 Trash</span>
             </div>
-            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44"> {/* C2 */}
-              <CardComponent isFaceDown />
+            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg"> {/* C2 */}
+              {player2StageCard ? (
+                <CardComponent 
+                  card={player2StageCard}
+                  onHover={() => handleCardHover(player2StageCard)}
+                  onMouseLeave={() => handleCardHover(null)}
+                />
+              ) : (
+                <div className="w-full h-full border-2 border-dashed border-gray-600 rounded-lg" />
+              )}
               <span className="text-white text-[10px] lg:text-sm mt-0.5 lg:mt-1 block">P2 Stage</span>
             </div>
-            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44"> {/* D2 */}
+            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg"> {/* D2 */}
               {player2Leader ? (
-                <CardComponent card={player2Leader} />
+                <CardComponent 
+                  card={player2Leader}
+                  onHover={() => handleCardHover(player2Leader)}
+                  onMouseLeave={() => handleCardHover(null)}
+                />
               ) : (
                 <div className="w-full h-full border-2 border-dashed border-gray-600 rounded-lg" />
               )}
@@ -193,7 +203,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
             {[...Array(5)].map((_, index) => (
               <div key={`p2-char-${index}`} className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg">
                 {player2CharacterField[index] && (
-                  <CardComponent card={player2CharacterField[index]} />
+                  <CardComponent 
+                    card={player2CharacterField[index]}
+                    onHover={() => handleCardHover(player2CharacterField[index])}
+                    onMouseLeave={() => handleCardHover(null)}
+                  />
                 )}
               </div>
             ))}
@@ -226,41 +240,61 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
             {/* Row 6: Empty (A6 - part of Life), Empty (B6), Deck (C6), Trash (D6), Stage (E6), Leader (F6) */}
             <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44"></div> {/* B6 - Empty cell */}
-            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 cursor-pointer" onClick={onDrawCard}> {/* C6 */}
-              {deck.length > 0 ? (
-                <div className="relative">
-                  <CardComponent isFaceDown />
-                  <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-1 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs">
-                    {deck.length}
+            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg cursor-pointer" onClick={onDrawCard}> {/* C6 */}
+              <div className="relative w-full h-full">
+                {deck.length > 0 ? (
+                  <>
+                    <CardComponent 
+                      isFaceDown 
+                      onHover={() => handleCardHover(deck[deck.length - 1])}
+                      onMouseLeave={() => handleCardHover(null)}
+                    />
+                    <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-1 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs">
+                      {deck.length}
+                    </div>
+                  </>
+                ) : (
+                  <div className="w-full h-full border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center">
+                    <span className="text-gray-500 text-[10px] lg:text-sm">Empty</span>
                   </div>
-                </div>
-              ) : (
-                <div className="w-full h-full border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center">
-                  <span className="text-gray-500 text-[10px] lg:text-sm">Empty</span>
-                </div>
-              )}
+                )}
+              </div>
               <span className="text-white text-[10px] lg:text-sm mt-0.5 lg:mt-1 block">Deck</span>
             </div>
-            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 cursor-pointer" onClick={onViewTrash}> {/* D6 */}
-              {trash.length > 0 ? (
-                <div className="relative">
-                  <CardComponent card={trash[trash.length - 1]} />
-                  {trash.length > 1 && (
-                    <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-1 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs">
-                      +{trash.length - 1}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <CardComponent isFaceDown />
-              )}
+            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg cursor-pointer" onClick={onViewTrash}> {/* D6 */}
+              <div className="relative w-full h-full">
+                {trash.length > 0 ? (
+                  <>
+                    <CardComponent 
+                      card={trash[trash.length - 1]}
+                      onHover={() => handleCardHover(trash[trash.length - 1])}
+                      onMouseLeave={() => handleCardHover(null)}
+                    />
+                    {trash.length > 1 && (
+                      <div className="absolute -bottom-1 -right-1 bg-gray-800 text-white px-1 lg:px-2 py-0.5 lg:py-1 rounded-full text-xs">
+                        +{trash.length - 1}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <CardComponent isFaceDown />
+                )}
+              </div>
               <span className="text-white text-[10px] lg:text-sm mt-0.5 lg:mt-1 block">Trash ({trash.length})</span>
             </div>
-            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44"> {/* E6 */}
-              <CardComponent isFaceDown />
+            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg"> {/* E6 */}
+              {stageCard ? (
+                <CardComponent 
+                  card={stageCard}
+                  onHover={() => handleCardHover(stageCard)}
+                  onMouseLeave={() => handleCardHover(null)}
+                />
+              ) : (
+                <div className="w-full h-full border-2 border-dashed border-gray-600 rounded-lg" />
+              )}
               <span className="text-white text-[10px] lg:text-sm mt-0.5 lg:mt-1 block">Stage</span>
             </div>
-            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44"> {/* F6 */}
+            <div className="w-full aspect-[5/7] min-w-[32px] lg:w-32 lg:h-44 border border-gray-600 rounded-lg"> {/* F6 */}
               {leader ? (
                 <CardOptions
                   card={leader}
@@ -313,7 +347,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         </div>
       </div>
 
-      {/* Trash View Modal - Ensure it's above everything */}
+      {/* Trash View Modal */}
       {isViewingTrash && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-800 p-6 rounded-lg w-[80vw] h-[80vh] flex flex-col relative">
