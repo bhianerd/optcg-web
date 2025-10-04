@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-    addCard,
-    deleteDeck,
-    removeCard,
-    saveDeck,
-    setDeckName,
-    setLeader,
-    setSelectedDeck
+  addCard,
+  decrementCard,
+  deleteDeck,
+  removeCard,
+  saveDeck,
+  setLeader,
+  setSelectedDeck
 } from '../../redux/slices/deckBuilderSlice';
 import type { RootState } from '../../redux/store';
 import type { Card, Deck } from '../../types/types';
@@ -16,6 +16,8 @@ import { exportDeckToFormula, groupCards } from '../../utils/deckUtils';
 import CardFilters from '../CardFilters';
 import CardGrid from '../CardGrid';
 import StackedCardDisplay from '../StackedCardDisplay';
+import { Button } from '../ui/Button';
+import { DeckToolbar } from './DeckToolbar';
 
 const DeckBuilder: React.FC = () => {
   const dispatch = useDispatch();
@@ -120,6 +122,28 @@ const DeckBuilder: React.FC = () => {
     }
   };
 
+  const handleCardRightClick = (card: Card) => {
+    if (!selectedDeck) return;
+
+    if (card.type.toLowerCase() === 'leader') {
+      // Don't allow removing leader via right-click
+      return;
+    }
+
+    // Get the base card ID (without promo suffixes)
+    const baseCardId = card.id.split('_')[0];
+    
+    // Find the first card with the same base ID in the deck
+    const cardToRemove = selectedDeck.cards.find(c => {
+      const cBaseId = c.id.split('_')[0];
+      return cBaseId === baseCardId;
+    });
+    
+    if (cardToRemove) {
+      dispatch(decrementCard(cardToRemove.id));
+    }
+  };
+
   const handleLoadDeck = (deck: Deck) => {
     dispatch(setSelectedDeck(deck));
     setShowSavedDecks(false);
@@ -165,61 +189,16 @@ const DeckBuilder: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 space-y-4">
-      {/* Create/Save/Import/Export Deck buttons */}
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="flex justify-between items-center">
-          <div className="flex gap-4 items-center">
-            {selectedDeck ? (
-              <>
-                <input
-                  type="text"
-                  value={selectedDeck.name}
-                  onChange={(e) => dispatch(setDeckName(e.target.value))}
-                  className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Deck Name"
-                />
-                <button
-                  onClick={() => dispatch(saveDeck(selectedDeck))}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  Save Deck
-                </button>
-                <button
-                  onClick={handleSaveAs}
-                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
-                >
-                  Save As New Deck
-                </button>
-                <button
-                  onClick={handleExportDeck}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                >
-                  Export Deck
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={handleCreateDeck}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-              >
-                Create New Deck
-              </button>
-            )}
-            <button
-              onClick={() => setImportModalOpen(true)}
-              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
-            >
-              Import Deck
-            </button>
-            <button
-              onClick={() => setShowSavedDecks(!showSavedDecks)}
-              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600"
-            >
-              {showSavedDecks ? 'Hide Saved Decks' : 'Show Saved Decks'}
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Deck Toolbar */}
+      <DeckToolbar
+        selectedDeck={selectedDeck}
+        showSavedDecks={showSavedDecks}
+        onCreateDeck={handleCreateDeck}
+        onSaveAs={handleSaveAs}
+        onExport={handleExportDeck}
+        onImport={() => setImportModalOpen(true)}
+        onToggleSavedDecks={() => setShowSavedDecks(!showSavedDecks)}
+      />
 
       {/* Saved Decks Modal */}
       {showSavedDecks && (
@@ -235,18 +214,20 @@ const DeckBuilder: React.FC = () => {
                     <div className="flex justify-between items-center mb-2">
                       <h3 className="font-bold">{deck.name}</h3>
                       <div className="flex gap-2">
-                        <button
+                        <Button
                           onClick={() => handleLoadDeck(deck)}
-                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+                          variant="blue"
+                          className="px-3 py-1 text-sm"
                         >
                           Load
-                        </button>
-                        <button
+                        </Button>
+                        <Button
                           onClick={() => handleDeleteDeck(deck.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          variant="red"
+                          className="px-3 py-1 text-sm"
                         >
                           Delete
-                        </button>
+                        </Button>
                       </div>
                     </div>
                     <div className="text-sm text-gray-600">
@@ -259,12 +240,12 @@ const DeckBuilder: React.FC = () => {
               </div>
             )}
             <div className="mt-4 flex justify-end">
-              <button
+              <Button
                 onClick={() => setShowSavedDecks(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                variant="gray"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -288,18 +269,18 @@ const DeckBuilder: React.FC = () => {
               <p className="text-red-500 mb-4">{importError}</p>
             )}
             <div className="flex justify-end gap-4">
-              <button
+              <Button
                 onClick={() => setImportModalOpen(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                variant="gray"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleImportDeck}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                variant="blue"
               >
                 Import
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -317,18 +298,18 @@ const DeckBuilder: React.FC = () => {
               {exportDeckToFormula(selectedDeck.leader, selectedDeck.cards)}
             </pre>
             <div className="flex justify-end gap-4">
-              <button
+              <Button
                 onClick={() => setExportModalOpen(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                variant="gray"
               >
                 Close
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleCopyToClipboard}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                variant="blue"
               >
                 Copy to Clipboard
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -385,6 +366,7 @@ const DeckBuilder: React.FC = () => {
                   <CardGrid 
                     cards={[selectedDeck.leader]} 
                     onCardClick={() => {}} 
+                    onCardRightClick={() => {}} 
                     onCardHover={setHoveredCard}
                   />
                 </div>
@@ -397,6 +379,7 @@ const DeckBuilder: React.FC = () => {
                     card={card}
                     count={count}
                     onClick={() => dispatch(removeCard(card.id))}
+                    onRightClick={() => dispatch(decrementCard(card.id))}
                     onHover={setHoveredCard}
                   />
                 ))}
@@ -419,6 +402,7 @@ const DeckBuilder: React.FC = () => {
               <CardGrid
                 cards={filteredCards}
                 onCardClick={handleCardClick}
+                onCardRightClick={handleCardRightClick}
                 onCardHover={setHoveredCard}
                 selectedCardIds={selectedDeck?.cards.map(card => card.id) || []}
               />

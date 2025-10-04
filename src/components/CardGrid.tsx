@@ -4,6 +4,7 @@ import CardDisplay from './CardDisplay';
 type CardGridProps = {
   cards: Card[];
   onCardClick: (card: Card) => void;
+  onCardRightClick?: (card: Card) => void;
   onCardHover?: (card: Card | null) => void;
   selectedCardIds?: string[];
 };
@@ -11,6 +12,7 @@ type CardGridProps = {
 export default function CardGrid({ 
   cards, 
   onCardClick, 
+  onCardRightClick,
   onCardHover,
   selectedCardIds = [] 
 }: CardGridProps) {
@@ -21,11 +23,11 @@ export default function CardGrid({
           key={card.id} 
           className="flex justify-center"
           onMouseEnter={() => { onCardHover?.(card); }}
-          onMouseLeave={() => { onCardHover?.(null); }}
         >
           <CardDisplay
             card={card}
             onClick={() => onCardClick(card)}
+            onRightClick={() => onCardRightClick?.(card)}
             selected={selectedCardIds.includes(card.id)}
           />
         </div>
