@@ -21,7 +21,6 @@ const StackedCardDisplay: React.FC<StackedCardDisplayProps> = ({
     <div 
       className="relative"
       onMouseEnter={() => onHover?.(card)}
-      onMouseLeave={() => onHover?.(null)}
     >
       <CardDisplay
         card={card}

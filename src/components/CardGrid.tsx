@@ -21,7 +21,6 @@ export default function CardGrid({
           key={card.id} 
           className="flex justify-center"
           onMouseEnter={() => { onCardHover?.(card); }}
-          onMouseLeave={() => { onCardHover?.(null); }}
         >
           <CardDisplay
             card={card}
