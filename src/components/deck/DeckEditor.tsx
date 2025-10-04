@@ -10,10 +10,10 @@ const DeckEditor: React.FC = () => {
 
   return (
     <Provider store={store}>
-      <div className="min-h-screen bg-gray-900 text-white">
+      <div className="min-h-screen bg-gray-100">
         <div className="max-w-7xl mx-auto">
           <div className="flex justify-between items-center p-4">
-            <h1 className="text-3xl font-bold">Deck Editor</h1>
+            <h1 className="text-3xl font-bold text-gray-800">Deck Editor</h1>
             <button
               onClick={() => navigate('/menu')}
               className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors duration-200"
