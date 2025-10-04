@@ -3,16 +3,23 @@ import type { Card } from '../types/types';
 type CardDisplayProps = {
   card: Card;
   onClick?: () => void;
+  onRightClick?: () => void;
   selected?: boolean;
 };
 
-export default function CardDisplay({ card, onClick, selected = false }: CardDisplayProps) {
+export default function CardDisplay({ card, onClick, onRightClick, selected = false }: CardDisplayProps) {
+  const handleRightClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent context menu
+    onRightClick?.();
+  };
+
   return (
     <div
       className={`relative cursor-pointer transition-transform hover:scale-105 ${
         selected ? 'ring-2 ring-blue-500' : ''
       }`}
       onClick={onClick}
+      onContextMenu={handleRightClick}
     >
       <div className="aspect-[2.5/3.5] w-full overflow-hidden rounded-lg">
         {card.img_url ? (

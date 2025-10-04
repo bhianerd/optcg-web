@@ -247,6 +247,15 @@ export const deckBuilderSlice = createSlice({
         );
       }
     },
+    decrementCard: (state, action: PayloadAction<string>) => {
+      if (state.selectedDeck) {
+        const cardId = action.payload;
+        const cardIndex = state.selectedDeck.cards.findIndex(card => card.id === cardId);
+        if (cardIndex !== -1) {
+          state.selectedDeck.cards.splice(cardIndex, 1);
+        }
+      }
+    },
     setLeader: (state, action: PayloadAction<Card>) => {
       if (state.selectedDeck) {
         state.selectedDeck.leader = action.payload;
@@ -306,6 +315,7 @@ export const {
   setSelectedDeck,
   addCard,
   removeCard,
+  decrementCard,
   setLeader,
   setDeckName,
   saveDeck,

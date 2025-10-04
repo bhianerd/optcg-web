@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   addCard,
+  decrementCard,
   deleteDeck,
   removeCard,
   saveDeck,
@@ -118,6 +119,28 @@ const DeckBuilder: React.FC = () => {
       if (cardCount < 4 && selectedDeck.cards.length < 50) {
         dispatch(addCard(card));
       }
+    }
+  };
+
+  const handleCardRightClick = (card: Card) => {
+    if (!selectedDeck) return;
+
+    if (card.type.toLowerCase() === 'leader') {
+      // Don't allow removing leader via right-click
+      return;
+    }
+
+    // Get the base card ID (without promo suffixes)
+    const baseCardId = card.id.split('_')[0];
+    
+    // Find the first card with the same base ID in the deck
+    const cardToRemove = selectedDeck.cards.find(c => {
+      const cBaseId = c.id.split('_')[0];
+      return cBaseId === baseCardId;
+    });
+    
+    if (cardToRemove) {
+      dispatch(decrementCard(cardToRemove.id));
     }
   };
 
@@ -343,6 +366,7 @@ const DeckBuilder: React.FC = () => {
                   <CardGrid 
                     cards={[selectedDeck.leader]} 
                     onCardClick={() => {}} 
+                    onCardRightClick={() => {}} 
                     onCardHover={setHoveredCard}
                   />
                 </div>
@@ -355,6 +379,7 @@ const DeckBuilder: React.FC = () => {
                     card={card}
                     count={count}
                     onClick={() => dispatch(removeCard(card.id))}
+                    onRightClick={() => dispatch(decrementCard(card.id))}
                     onHover={setHoveredCard}
                   />
                 ))}
@@ -377,6 +402,7 @@ const DeckBuilder: React.FC = () => {
               <CardGrid
                 cards={filteredCards}
                 onCardClick={handleCardClick}
+                onCardRightClick={handleCardRightClick}
                 onCardHover={setHoveredCard}
                 selectedCardIds={selectedDeck?.cards.map(card => card.id) || []}
               />
