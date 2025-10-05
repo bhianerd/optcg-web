@@ -1,0 +1,4 @@
+---
+Use yarn when possible for installing packages
+alwaysApply: true
+---
