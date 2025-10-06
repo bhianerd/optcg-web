@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import TestSupabase from '../TestSupabase';
 
 const MenuPage: React.FC = () => {
   const navigate = useNavigate();
@@ -38,10 +39,10 @@ const MenuPage: React.FC = () => {
         Version 1.0.0
       </div>
 
-      {/* Supabase Test Component - Temporarily disabled */}
-      {/* <div className="mt-8">
+      {/* Supabase Test Component */}
+      <div className="mt-8">
         <TestSupabase />
-      </div> */}
+      </div>
     </div>
   );
 };
