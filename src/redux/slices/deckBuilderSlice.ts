@@ -1,10 +1,77 @@
 // src/redux/slices/deckBuilderSlice.ts
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
+// import { SupabaseDeckService } from '../../services/supabaseDeckService';
 import type { Card, CardColor, CardType, Deck } from '../../types/types';
 
-// Local storage key for saved decks
+// Local storage key for saved decks (fallback)
 const SAVED_DECKS_KEY = 'optcg_saved_decks';
+
+// Async thunks for Supabase operations - Temporarily disabled
+/*
+export const loadDecks = createAsyncThunk(
+  'deckBuilder/loadDecks',
+  async () => {
+    try {
+      return await SupabaseDeckService.getDecks();
+    } catch (error) {
+      console.error('Failed to load decks from Supabase, falling back to localStorage:', error);
+      return loadSavedDecks();
+    }
+  }
+);
+
+export const saveDeckAsync = createAsyncThunk(
+  'deckBuilder/saveDeckAsync',
+  async (deck: Deck) => {
+    try {
+      const savedDeck = await SupabaseDeckService.saveDeck(deck);
+      if (!savedDeck) {
+        throw new Error('Failed to save deck to Supabase');
+      }
+      return savedDeck;
+    } catch (error) {
+      console.error('Failed to save deck to Supabase, falling back to localStorage:', error);
+      // Fallback to localStorage
+      const savedDecks = loadSavedDecks();
+      const deckToSave = {
+        ...deck,
+        updatedAt: new Date()
+      };
+
+      const existingIndex = savedDecks.findIndex(d => d.id === deckToSave.id);
+      if (existingIndex >= 0) {
+        savedDecks[existingIndex] = deckToSave;
+      } else {
+        savedDecks.push(deckToSave);
+      }
+
+      saveDecksToStorage(savedDecks);
+      return deckToSave;
+    }
+  }
+);
+
+export const deleteDeckAsync = createAsyncThunk(
+  'deckBuilder/deleteDeckAsync',
+  async (deckId: string) => {
+    try {
+      const success = await SupabaseDeckService.deleteDeck(deckId);
+      if (!success) {
+        throw new Error('Failed to delete deck from Supabase');
+      }
+      return deckId;
+    } catch (error) {
+      console.error('Failed to delete deck from Supabase, falling back to localStorage:', error);
+      // Fallback to localStorage
+      const savedDecks = loadSavedDecks();
+      const filteredDecks = savedDecks.filter(d => d.id !== deckId);
+      saveDecksToStorage(filteredDecks);
+      return deckId;
+    }
+  }
+);
+*/
 
 // Type guard to check if an object is a Deck
 const isDeck = (obj: unknown): obj is Deck => {
@@ -301,7 +368,84 @@ export const deckBuilderSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
+    addCardToDeck: (state, action: PayloadAction<Card>) => {
+      if (state.selectedDeck && state.selectedDeck.cards.length < 50) {
+        state.selectedDeck.cards.push(action.payload);
+      }
+    },
+    loadDeck: (state, action: PayloadAction<string>) => {
+      const deck = state.savedDecks.find(d => d.id === action.payload);
+      if (deck) {
+        state.selectedDeck = deck;
+      }
+    },
   },
+  // extraReducers temporarily disabled for Supabase integration
+  /*
+  extraReducers: (builder) => {
+    // Load decks
+    builder
+      .addCase(loadDecks.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(loadDecks.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.savedDecks = action.payload as Deck[];
+      })
+      .addCase(loadDecks.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to load decks';
+      });
+
+    // Save deck async
+    builder
+      .addCase(saveDeckAsync.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(saveDeckAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const savedDeck = action.payload as Deck;
+        
+        const existingIndex = state.savedDecks.findIndex(deck => deck.id === savedDeck.id);
+        if (existingIndex >= 0) {
+          state.savedDecks[existingIndex] = savedDeck;
+        } else {
+          state.savedDecks.push(savedDeck);
+        }
+        
+        // Update selected deck if it's the same
+        if (state.selectedDeck?.id === savedDeck.id) {
+          state.selectedDeck = savedDeck;
+        }
+      })
+      .addCase(saveDeckAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to save deck';
+      });
+
+    // Delete deck async
+    builder
+      .addCase(deleteDeckAsync.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteDeckAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const deckId = action.payload as string;
+        state.savedDecks = state.savedDecks.filter(deck => deck.id !== deckId);
+        
+        if (state.selectedDeck?.id === deckId) {
+          state.selectedDeck = null;
+        }
+      })
+      .addCase(deleteDeckAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.error.message || 'Failed to delete deck';
+      });
+  },
+  */
 });
 
 export const {
@@ -314,11 +458,13 @@ export const {
   resetFilters,
   setSelectedDeck,
   addCard,
+  addCardToDeck,
   removeCard,
   decrementCard,
   setLeader,
   setDeckName,
   saveDeck,
+  loadDeck,
   deleteDeck,
   setLoading,
   setError,

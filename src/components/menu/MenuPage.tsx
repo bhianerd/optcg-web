@@ -37,6 +37,11 @@ const MenuPage: React.FC = () => {
       <div className="mt-8 text-gray-500 text-sm">
         Version 1.0.0
       </div>
+
+      {/* Supabase Test Component - Temporarily disabled */}
+      {/* <div className="mt-8">
+        <TestSupabase />
+      </div> */}
     </div>
   );
 };

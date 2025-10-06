@@ -9,7 +9,7 @@ export default function CardList() {
 
   const filteredCards = cardsData.filter(card => {
     const matchesSearch = card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         card.effect.toLowerCase().includes(searchTerm.toLowerCase());
+                         (card.effect && card.effect.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesColor = selectedColor === 'ALL' || card.color === selectedColor;
     const matchesType = selectedType === 'ALL' || card.type === selectedType;
     

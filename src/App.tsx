@@ -32,13 +32,13 @@ function isStoredDeck(deck: unknown): deck is StoredDeck {
 function App() {
   // Get saved decks from localStorage and parse with type safety
   const savedDecksJson = localStorage.getItem('optcg_saved_decks');
-  let savedDecks: Deck[] = [];
+  let _savedDecks: Deck[] = [];
   
   try {
     if (savedDecksJson) {
       const parsed: unknown = JSON.parse(savedDecksJson);
       if (Array.isArray(parsed) && parsed.every(isStoredDeck)) {
-        savedDecks = parsed.map(deck => ({
+        _savedDecks = parsed.map(deck => ({
           ...deck,
           createdAt: new Date(deck.createdAt),
           updatedAt: new Date(deck.updatedAt)
@@ -50,7 +50,7 @@ function App() {
   }
 
   // Create a test card
-  const testCard: Card = {
+  const _testCard: Card = {
     id: 'OP01-002',
     name: 'Straw Hat Crew',
     color: CardColor.RED,
@@ -69,6 +69,7 @@ function App() {
   };
 
   // Use the first deck as both player and opponent deck for testing
+  /*
   const testDeck: Deck = savedDecks[0] ?? {
     id: 'test-deck-1',
     name: 'Test Deck',
@@ -93,6 +94,7 @@ function App() {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
+  */
 
   return (
     <Router>

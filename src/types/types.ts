@@ -35,6 +35,7 @@ export type Card = {
   rarity?: string;
   set_id?: string;
   card_number?: string;
+  set?: string;
 };
 
 export interface Deck {

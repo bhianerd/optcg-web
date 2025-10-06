@@ -13,7 +13,7 @@ import { CardColor, CardType } from '../types/types';
 
 export default function CardFilters() {
   const dispatch = useDispatch();
-  const { searchTerm, filters, allCards } = useSelector((state: RootState) => state.deckBuilder);
+  const { filters, allCards } = useSelector((state: RootState) => state.deckBuilder);
   const [localSearchTerm, setLocalSearchTerm] = useState('');
 
   const handleSearch = () => {

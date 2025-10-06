@@ -1,6 +1,6 @@
 'use client';
 
-import DeckBuilder from '../../components/DeckBuilder';
+import DeckBuilder from '../../components/deckbuilder/DeckBuilder';
 import { Card, CardColor, CardType, Deck } from '../../types/types';
 
 // This would typically come from an API or database
@@ -30,10 +30,7 @@ export default function DeckBuilderPage() {
     <main className="min-h-screen bg-gray-100">
       <div className="container mx-auto py-8">
         <h1 className="text-3xl font-bold mb-8 text-center">One Piece TCG Deck Builder</h1>
-        <DeckBuilder
-          availableCards={mockCards}
-          onSave={handleSaveDeck}
-        />
+        <DeckBuilder />
       </div>
     </main>
   );

@@ -11,7 +11,7 @@ const CardItem: React.FC<CardItemProps> = ({ card, showAddButton = true }) => {
   const dispatch = useAppDispatch();
   
   const handleAddCard = () => {
-    dispatch(addCardToDeck(card.id));
+    dispatch(addCardToDeck(card));
   };
   
   const colorClassMap = {

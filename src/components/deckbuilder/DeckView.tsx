@@ -11,8 +11,8 @@ type DeckViewProps = {
 const DeckView: React.FC<DeckViewProps> = ({ deck, onRemoveCard }) => {
   const allCards = useAppSelector((state) => state.deckBuilder.allCards);
   
-  const cardCounts = deck.cards.reduce<Record<string, number>>((acc, cardId) => {
-    acc[cardId] = (acc[cardId] || 0) + 1;
+  const cardCounts = deck.cards.reduce<Record<string, number>>((acc, card) => {
+    acc[card.id] = (acc[card.id] || 0) + 1;
     return acc;
   }, {});
   const getCardById = (id: string): Card | undefined => {
