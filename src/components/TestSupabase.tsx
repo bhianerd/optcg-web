@@ -96,6 +96,68 @@ export default function TestSupabase() {
     }
   }
 
+  const handleTestInsertCard = async () => {
+    try {
+      setStatus('Testing card insert...')
+      setError(null)
+      
+      // Try to insert a test card
+      const { data, error } = await supabase
+        .from('cards')
+        .insert({
+          id: 'TEST-001',
+          name: 'Test Card',
+          type: 'character',
+          img_url: '/test.jpg',
+          color: 'red',
+          cost: 3,
+          power: 4000,
+        })
+        .select()
+        .single()
+      
+      if (error) {
+        if (error.message.includes('duplicate key')) {
+          setStatus('⚠️ Card already exists (that\'s ok!)')
+        } else {
+          setError(`Insert error: ${error.message}`)
+          setStatus('❌ Insert failed')
+        }
+      } else {
+        setStatus('✅ Card inserted successfully!')
+        console.log('Inserted card:', data)
+      }
+    } catch (err) {
+      setError(`Insert error: ${err}`)
+      setStatus('❌ Insert failed')
+    }
+  }
+
+  const handleTestReadCard = async () => {
+    try {
+      setStatus('Testing card read...')
+      setError(null)
+      
+      // Try to read the test card
+      const { data, error } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('id', 'TEST-001')
+        .single()
+      
+      if (error) {
+        setError(`Read error: ${error.message}`)
+        setStatus('❌ Read failed')
+      } else {
+        setStatus(`✅ Card found: ${data.name} (${data.color})`)
+        console.log('Found card:', data)
+      }
+    } catch (err) {
+      setError(`Read error: ${err}`)
+      setStatus('❌ Read failed')
+    }
+  }
+
   return (
     <div className="p-4 bg-blue-100 rounded-lg max-w-md">
       <h3 className="font-bold text-lg mb-2">Supabase Integration Test</h3>
@@ -112,7 +174,7 @@ export default function TestSupabase() {
         <p className="text-red-600 text-sm mb-2">Error: {error}</p>
       )}
       
-      <div className="space-x-2">
+      <div className="space-x-2 space-y-2">
         <button
           onClick={handleSignUp}
           className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
@@ -124,6 +186,18 @@ export default function TestSupabase() {
           className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
         >
           Sign Out
+        </button>
+        <button
+          onClick={handleTestInsertCard}
+          className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+        >
+          Test Insert Card
+        </button>
+        <button
+          onClick={handleTestReadCard}
+          className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
+        >
+          Test Read Card
         </button>
       </div>
     </div>
