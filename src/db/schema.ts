@@ -1,14 +1,6 @@
 import { boolean, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
-// Users table (extends Supabase auth.users)
-export const users = pgTable('users', {
-  id: uuid('id').primaryKey(),
-  email: text('email').notNull().unique(),
-  name: text('name'),
-  avatar_url: text('avatar_url'),
-  created_at: timestamp('created_at').defaultNow().notNull(),
-  updated_at: timestamp('updated_at').defaultNow().notNull(),
-})
+// Note: We use Supabase's built-in auth.users table instead of creating our own
 
 // Cards table - stores all available cards
 export const cards = pgTable('cards', {
@@ -37,7 +29,7 @@ export const decks = pgTable('decks', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
   leader_id: text('leader_id').notNull().references(() => cards.id),
-  user_id: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  user_id: uuid('user_id'), // References auth.users (Supabase built-in)
   is_public: boolean('is_public').default(false),
   description: text('description'),
   created_at: timestamp('created_at').defaultNow().notNull(),

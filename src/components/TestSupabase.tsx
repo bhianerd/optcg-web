@@ -86,6 +86,23 @@ export default function TestSupabase() {
     }
   }
 
+  const handleSignIn = async () => {
+    try {
+      setError(null)
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: 'test@example.com',
+        password: 'password123',
+      })
+      
+      if (error) throw error
+      setUser(data.user)
+      setStatus('✅ Signed in successfully!')
+    } catch (err) {
+      setError(`Sign in error: ${err}`)
+      setStatus('❌ Sign in failed')
+    }
+  }
+
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut()
@@ -158,6 +175,59 @@ export default function TestSupabase() {
     }
   }
 
+  const handleTestCreateDeck = async () => {
+    try {
+      setStatus('Testing deck creation...')
+      setError(null)
+      
+      // Step 0: Check if user is authenticated
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) {
+        setError('Not authenticated! Click "Sign Up Test" first.')
+        setStatus('❌ Need to sign up first')
+        return
+      }
+      
+      // Step 1: Ensure we have a leader card
+      const { data: leaderCard, error: leaderError } = await supabase
+        .from('cards')
+        .select('*')
+        .eq('id', 'TEST-001')
+        .single()
+      
+      if (leaderError) {
+        setError('Leader card not found. Click "Test Insert Card" first!')
+        setStatus('❌ Need leader card')
+        return
+      }
+      
+      // Step 2: Create a deck (include user_id)
+      const { data: deck, error: deckError } = await supabase
+        .from('decks')
+        .insert({
+          name: 'Test Deck',
+          leader_id: 'TEST-001',
+          user_id: currentUser.id,  // Add user_id for RLS policy
+          is_public: false,
+          description: 'A test deck',
+        })
+        .select()
+        .single()
+      
+      if (deckError) {
+        setError(`Deck creation error: ${deckError.message}`)
+        setStatus('❌ Deck creation failed')
+        return
+      }
+      
+      console.log('Created deck:', deck)
+      setStatus(`✅ Deck created! ID: ${deck.id.substring(0, 8)}...`)
+    } catch (err) {
+      setError(`Deck creation error: ${err}`)
+      setStatus('❌ Deck creation failed')
+    }
+  }
+
   return (
     <div className="p-4 bg-blue-100 rounded-lg max-w-md">
       <h3 className="font-bold text-lg mb-2">Supabase Integration Test</h3>
@@ -182,6 +252,12 @@ export default function TestSupabase() {
           Sign Up Test
         </button>
         <button
+          onClick={handleSignIn}
+          className="px-3 py-1 bg-indigo-500 text-white rounded text-sm hover:bg-indigo-600"
+        >
+          Sign In
+        </button>
+        <button
           onClick={handleSignOut}
           className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
         >
@@ -198,6 +274,12 @@ export default function TestSupabase() {
           className="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600"
         >
           Test Read Card
+        </button>
+        <button
+          onClick={handleTestCreateDeck}
+          className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
+        >
+          Test Create Deck
         </button>
       </div>
     </div>
