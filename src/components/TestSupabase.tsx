@@ -9,17 +9,45 @@ export default function TestSupabase() {
   useEffect(() => {
     const testConnection = async () => {
       try {
-        // Test Supabase connection
-        const { data, error } = await supabase
+        // Test Supabase connection by checking if tables exist
+        const tests = []
+        
+        // Test users table
+        const { data: usersData, error: usersError } = await supabase
+          .from('users')
+          .select('count')
+          .limit(1)
+        tests.push({ table: 'users', success: !usersError })
+        
+        // Test cards table
+        const { data: cardsData, error: cardsError } = await supabase
+          .from('cards')
+          .select('count')
+          .limit(1)
+        tests.push({ table: 'cards', success: !cardsError })
+        
+        // Test decks table
+        const { data: decksData, error: decksError } = await supabase
           .from('decks')
           .select('count')
           .limit(1)
+        tests.push({ table: 'decks', success: !decksError })
         
-        if (error) {
-          setError(`Database error: ${error.message}`)
-          setStatus('❌ Connection failed')
+        // Test deck_cards table
+        const { data: deckCardsData, error: deckCardsError } = await supabase
+          .from('deck_cards')
+          .select('count')
+          .limit(1)
+        tests.push({ table: 'deck_cards', success: !deckCardsError })
+        
+        const allSuccess = tests.every(t => t.success)
+        
+        if (allSuccess) {
+          setStatus('✅ Connected to Supabase! All tables found.')
         } else {
-          setStatus('✅ Connected to Supabase!')
+          const failedTables = tests.filter(t => !t.success).map(t => t.table)
+          setError(`Missing tables: ${failedTables.join(', ')}`)
+          setStatus('⚠️ Connected but missing tables')
         }
 
         // Get current user
