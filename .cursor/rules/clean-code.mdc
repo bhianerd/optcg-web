@@ -1,0 +1,781 @@
+
+```markdown
+---
+description: "Core project context and patterns for One Piece TCG Deck Builder"
+globs:
+  - "**/*.ts"
+  - "**/*.tsx"
+alwaysApply: true
+---
+# One Piece TCG Deck Builder - Project Guidelines
+
+## Project Overview
+A One Piece Trading Card Game deck builder and game simulator with:
+- React 18 + TypeScript + Vite
+- Redux Toolkit for state management
+- Supabase for backend (auth + PostgreSQL)
+- Drizzle ORM for database queries
+- Tailwind CSS for styling
+- React Router DOM for routing
+
+## Core Principles
+
+### Readability First
+- **Code is read 10x more than written** - optimize for the reader
+- **Self-documenting code** - clear names over clever tricks
+- **Functions should tell a story** - read like plain English
+- **One level of abstraction per function** - don't mix high and low level logic
+- **Avoid mental gymnastics** - explicit is better than implicit
+
+### Functional Programming Patterns
+- **Immutability by default** - never mutate, always return new
+- **Pure functions** - same input always produces same output
+- **Function composition** - build complex logic from simple functions
+- **Declarative over imperative** - describe WHAT, not HOW
+- **Avoid side effects** - isolate I/O and mutations
+- **Small, focused functions** - do one thing well
+
+## TypeScript Guidelines
+
+- **Strict Typing:**
+  - Enable strict typing in `tsconfig.json`
+  - Prefer interfaces over types for data structures
+  - Use type aliases for unions and complex types
+  - Avoid `any`; use `unknown` when type is truly unknown
+  - Use `React.FC` for functional components with props
+
+- **Readable Type Definitions:**
+  ```typescript
+  // ✅ GOOD: Clear, descriptive names
+  interface DeckWithCards {
+    id: string
+    name: string
+    leader: Card
+    cards: CardWithCount[]
+  }
+  
+  // ❌ BAD: Cryptic abbreviations
+  interface DwC {
+    i: string
+    n: string
+    l: Card
+    c: CwC[]
+  }
+  ```
+
+- **Type Imports:**
+  ```typescript
+  // ✅ GOOD: Separate type imports for clarity
+  import type { Card, Deck } from '../types/types'
+  import { supabase } from '../lib/supabase'
+  
+  // ❌ BAD: Mixed type and value imports
+  import { Card, Deck, supabase } from '../stuff'
+  ```
+
+## Functional Programming Patterns
+
+### Pure Functions
+```typescript
+// ✅ GOOD: Pure function - no side effects
+const calculateDeckPower = (cards: Card[]): number => {
+  return cards.reduce((total, card) => total + (card.power || 0), 0)
+}
+
+// ❌ BAD: Impure - modifies external state
+let totalPower = 0
+const calculateDeckPower = (cards: Card[]) => {
+  cards.forEach(card => totalPower += card.power || 0)
+}
+```
+
+### Immutability
+```typescript
+// ✅ GOOD: Immutable update
+const addCardToDeck = (deck: Deck, card: Card): Deck => ({
+  ...deck,
+  cards: [...deck.cards, card]
+})
+
+// ❌ BAD: Mutates original
+const addCardToDeck = (deck: Deck, card: Card) => {
+  deck.cards.push(card)
+  return deck
+}
+```
+
+### Function Composition
+```typescript
+// ✅ GOOD: Small, composable functions
+const filterByColor = (color: string) => (card: Card) => 
+  card.color === color
+
+const filterByCost = (maxCost: number) => (card: Card) => 
+  (card.cost || 0) <= maxCost
+
+const sortByPower = (a: Card, b: Card) => 
+  (b.power || 0) - (a.power || 0)
+
+// Compose them
+const getAffordableRedCards = (cards: Card[]) => 
+  cards
+    .filter(filterByColor('red'))
+    .filter(filterByCost(5))
+    .sort(sortByPower)
+
+// ❌ BAD: One big function doing everything
+const getCards = (cards: Card[]) => {
+  let result = []
+  for (let i = 0; i < cards.length; i++) {
+    if (cards[i].color === 'red' && cards[i].cost <= 5) {
+      result.push(cards[i])
+    }
+  }
+  result.sort((a, b) => b.power - a.power)
+  return result
+}
+```
+
+### Declarative Style
+```typescript
+// ✅ GOOD: Declarative - describes WHAT
+const getLeaderCards = (cards: Card[]): Card[] =>
+  cards.filter(card => card.type === 'leader')
+
+// ❌ BAD: Imperative - describes HOW
+const getLeaderCards = (cards: Card[]): Card[] => {
+  const leaders = []
+  for (let i = 0; i < cards.length; i++) {
+    if (cards[i].type === 'leader') {
+      leaders.push(cards[i])
+    }
+  }
+  return leaders
+}
+```
+
+## Readability Guidelines
+
+### Naming Conventions
+```typescript
+// ✅ GOOD: Clear, descriptive names
+const filterCardsByColorAndCost = (
+  cards: Card[],
+  targetColor: string,
+  maxCost: number
+): Card[] => {
+  return cards.filter(card => 
+    card.color === targetColor && 
+    (card.cost || 0) <= maxCost
+  )
+}
+
+// ❌ BAD: Cryptic abbreviations
+const fltCrdsByClrCst = (c: Card[], tc: string, mc: number) => {
+  return c.filter(x => x.color === tc && x.cost <= mc)
+}
+```
+
+### Function Length
+```typescript
+// ✅ GOOD: Functions under 20 lines
+const validateDeck = (deck: Deck): ValidationResult => {
+  if (!hasValidLeader(deck)) {
+    return { valid: false, error: 'Invalid leader' }
+  }
+  
+  if (!hasValidCardCount(deck)) {
+    return { valid: false, error: 'Invalid card count' }
+  }
+  
+  if (!hasValidColorDistribution(deck)) {
+    return { valid: false, error: 'Invalid colors' }
+  }
+  
+  return { valid: true }
+}
+
+// ❌ BAD: 100+ line function doing everything
+const validateDeck = (deck: Deck) => {
+  // ... 100 lines of validation logic ...
+}
+```
+
+### Early Returns for Clarity
+```typescript
+// ✅ GOOD: Early returns reduce nesting
+const processCard = (card: Card | null): string => {
+  if (!card) return 'No card'
+  if (!card.name) return 'Unnamed card'
+  if (card.type === 'leader') return `Leader: ${card.name}`
+  
+  return `Card: ${card.name}`
+}
+
+// ❌ BAD: Nested conditionals
+const processCard = (card: Card | null): string => {
+  if (card) {
+    if (card.name) {
+      if (card.type === 'leader') {
+        return `Leader: ${card.name}`
+      } else {
+        return `Card: ${card.name}`
+      }
+    } else {
+      return 'Unnamed card'
+    }
+  } else {
+    return 'No card'
+  }
+}
+```
+
+### Single Responsibility Principle
+```typescript
+// ✅ GOOD: Each function does one thing
+const fetchDecks = async (userId: string): Promise<Deck[]> => {
+  const { data, error } = await supabase
+    .from('decks')
+    .select('*')
+    .eq('user_id', userId)
+  
+  if (error) throw error
+  return data
+}
+
+const enrichDecksWithCards = async (decks: Deck[]): Promise<DeckWithCards[]> => {
+  return Promise.all(decks.map(enrichDeckWithCards))
+}
+
+const loadUserDecks = async (userId: string): Promise<DeckWithCards[]> => {
+  const decks = await fetchDecks(userId)
+  return enrichDecksWithCards(decks)
+}
+
+// ❌ BAD: One function doing multiple things
+const loadUserDecks = async (userId: string) => {
+  // Fetch decks
+  const { data, error } = await supabase.from('decks').select('*')
+  if (error) throw error
+  
+  // Enrich with cards
+  const enriched = []
+  for (const deck of data) {
+    const { data: cards } = await supabase.from('deck_cards').select('*')
+    enriched.push({ ...deck, cards })
+  }
+  
+  // Sort and filter
+  return enriched.filter(d => d.cards.length > 0).sort((a, b) => a.name.localeCompare(b.name))
+}
+```
+
+## React Best Practices
+
+### Functional Components
+```typescript
+// ✅ GOOD: Functional, readable component
+interface CardDisplayProps {
+  card: Card
+  onSelect: (card: Card) => void
+}
+
+const CardDisplay: React.FC<CardDisplayProps> = ({ card, onSelect }) => {
+  const handleClick = () => onSelect(card)
+  
+  return (
+    <div 
+      className="card-display"
+      onClick={handleClick}
+    >
+      <img src={card.img_url} alt={card.name} />
+      <h3>{card.name}</h3>
+      <CardStats card={card} />
+    </div>
+  )
+}
+```
+
+### Custom Hooks for Reusability
+```typescript
+// ✅ GOOD: Extract complex logic into hooks
+const useDeckValidation = (deck: Deck | null) => {
+  return useMemo(() => {
+    if (!deck) return { isValid: false, errors: [] }
+    
+    const errors: string[] = []
+    
+    if (deck.cards.length < 40) {
+      errors.push('Deck must have at least 40 cards')
+    }
+    
+    if (deck.cards.length > 50) {
+      errors.push('Deck cannot exceed 50 cards')
+    }
+    
+    return {
+      isValid: errors.length === 0,
+      errors,
+    }
+  }, [deck])
+}
+```
+
+### Avoid Inline Functions in JSX
+```typescript
+// ✅ GOOD: useCallback for performance
+const CardGrid: React.FC<CardGridProps> = ({ cards, onCardClick }) => {
+  const handleCardClick = useCallback((card: Card) => {
+    onCardClick(card)
+  }, [onCardClick])
+  
+  return (
+    <div className="grid">
+      {cards.map(card => (
+        <CardDisplay 
+          key={card.id}
+          card={card}
+          onClick={handleCardClick}
+        />
+      ))}
+    </div>
+  )
+}
+
+// ❌ BAD: Inline function creates new reference every render
+const CardGrid: React.FC = ({ cards }) => {
+  return (
+    <div className="grid">
+      {cards.map(card => (
+        <CardDisplay 
+          card={card}
+          onClick={() => console.log(card)}  // New function every render!
+        />
+      ))}
+    </div>
+  )
+}
+```
+
+## Database & Supabase
+
+### Schema Structure (Normalized - NO JSONB!)
+- `cards` - All available cards (normalized)
+- `decks` - Deck metadata (id, name, leader_id, user_id)
+- `deck_cards` - Many-to-many relationship (deck_id, card_id, count)
+- Use Supabase's built-in `auth.users` (no custom users table)
+
+### Query Functions Should Be Pure
+```typescript
+// ✅ GOOD: Pure database query functions
+const getDecksByUserId = async (userId: string): Promise<Deck[]> => {
+  const { data, error } = await supabase
+    .from('decks')
+    .select('*')
+    .eq('user_id', userId)
+    .order('updated_at', { ascending: false })
+  
+  if (error) throw error
+  return data || []
+}
+
+// ❌ BAD: Side effects in query
+const getDecksByUserId = async (userId: string) => {
+  console.log('Fetching...') // Side effect!
+  globalDeckCache = await fetch(...)  // Mutation!
+  return globalDeckCache
+}
+```
+
+### Compose Database Operations
+```typescript
+// ✅ GOOD: Small, composable operations
+const createDeck = async (deck: Omit<Deck, 'id'>): Promise<Deck> => {
+  const { data, error } = await supabase
+    .from('decks')
+    .insert(deck)
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data
+}
+
+const addCardsToDeck = async (
+  deckId: string, 
+  cardIds: string[]
+): Promise<void> => {
+  const deckCards = cardIds.map(cardId => ({
+    deck_id: deckId,
+    card_id: cardId,
+    count: 1,
+  }))
+  
+  const { error } = await supabase
+    .from('deck_cards')
+    .insert(deckCards)
+  
+  if (error) throw error
+}
+
+const createDeckWithCards = async (
+  deck: Omit<Deck, 'id'>,
+  cardIds: string[]
+): Promise<Deck> => {
+  const createdDeck = await createDeck(deck)
+  await addCardsToDeck(createdDeck.id, cardIds)
+  return createdDeck
+}
+```
+
+### Authentication Patterns
+```typescript
+// Always check for authenticated user before protected operations
+// Always include user_id in inserts for user-owned data
+const createDeck = async (deck: Omit<Deck, 'id' | 'user_id'>): Promise<Deck> => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  
+  const { data, error } = await supabase
+    .from('decks')
+    .insert({
+      ...deck,
+      user_id: user.id,  // Required for RLS
+    })
+    .select()
+    .single()
+  
+  if (error) throw error
+  return data
+}
+```
+
+## Redux Patterns
+
+### Pure Reducers
+```typescript
+// ✅ GOOD: Pure reducer - no mutations (Immer allows "mutations")
+const deckBuilderSlice = createSlice({
+  name: 'deckBuilder',
+  initialState,
+  reducers: {
+    addCard: (state, action: PayloadAction<Card>) => {
+      if (!state.selectedDeck) return
+      
+      // Immer allows "mutations" that are actually immutable
+      state.selectedDeck.cards.push(action.payload)
+    },
+    
+    removeCard: (state, action: PayloadAction<string>) => {
+      if (!state.selectedDeck) return
+      
+      state.selectedDeck.cards = state.selectedDeck.cards.filter(
+        card => card.id !== action.payload
+      )
+    },
+  },
+})
+```
+
+### Selectors for Derived State
+```typescript
+// ✅ GOOD: Use selectors for computed values
+const selectDeckCardCount = (state: RootState): number =>
+  state.deckBuilder.selectedDeck?.cards.length || 0
+
+const selectDeckIsValid = (state: RootState): boolean => {
+  const count = selectDeckCardCount(state)
+  return count >= 40 && count <= 50
+}
+
+const selectDecksByColor = (color: string) => (state: RootState): Deck[] =>
+  state.deckBuilder.savedDecks.filter(deck => 
+    deck.leader.color === color
+  )
+
+// Usage in component
+const DeckBuilder: React.FC = () => {
+  const cardCount = useSelector(selectDeckCardCount)
+  const isValid = useSelector(selectDeckIsValid)
+  const redDecks = useSelector(selectDecksByColor('red'))
+}
+
+// ❌ BAD: Computing in component
+const DeckBuilder: React.FC = () => {
+  const deck = useSelector(state => state.deckBuilder.selectedDeck)
+  const cardCount = deck?.cards.length || 0  // Computed every render
+  const isValid = cardCount >= 40 && cardCount <= 50
+}
+```
+
+### Async Thunks with Fallback
+```typescript
+// ✅ GOOD: Fallback to localStorage if Supabase fails
+export const loadDecks = createAsyncThunk(
+  'deckBuilder/loadDecks',
+  async () => {
+    try {
+      return await SupabaseDeckService.getDecks()
+    } catch (error) {
+      console.error('Failed to load from Supabase, falling back to localStorage:', error)
+      return loadSavedDecks()
+    }
+  }
+)
+```
+
+## Code Organization
+
+### File Structure
+```
+src/
+├── components/
+│   ├── deckbuilder/        # Feature-specific components
+│   ├── game/               # Game board components
+│   ├── menu/               # Menu components
+│   └── ui/                 # Reusable UI components
+├── db/
+│   ├── models/             # Database query functions
+│   ├── schema.ts           # Drizzle schema
+│   └── connection.ts       # DB connection
+├── lib/                    # Third-party integrations
+│   └── supabase.ts
+├── redux/
+│   ├── slices/             # Redux slices
+│   └── store.ts            # Store configuration
+├── services/               # External API services
+├── types/                  # TypeScript type definitions
+└── utils/                  # Pure utility functions
+```
+
+### Module Boundaries
+```typescript
+// ✅ GOOD: Clear separation of concerns
+// utils/deckValidation.ts - Pure functions
+export const isValidDeckSize = (cardCount: number): boolean =>
+  cardCount >= 40 && cardCount <= 50
+
+// services/deckService.ts - API calls
+export const DeckService = {
+  async getDecks(): Promise<Deck[]> {
+    // ... Supabase calls
+  }
+}
+
+// components/DeckBuilder.tsx - UI logic
+const DeckBuilder: React.FC = () => {
+  // ... component logic
+}
+```
+
+### Import Order
+```typescript
+// 1. React/External libraries
+import { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+
+// 2. Internal modules
+import { supabase } from '../lib/supabase'
+import { DeckModel } from '../db/models/DeckModel'
+
+// 3. Types
+import type { Card, Deck } from '../types/types'
+
+// 4. Styles/Assets
+import './styles.css'
+```
+
+## Common Patterns
+
+### Pipeline Pattern for Data Transformation
+```typescript
+// ✅ GOOD: Clear data transformation pipeline
+const processCards = (cards: Card[]): ProcessedCard[] =>
+  cards
+    .filter(isValidCard)
+    .map(normalizeCard)
+    .map(enrichWithMetadata)
+    .sort(byPowerDescending)
+
+// ❌ BAD: Unclear transformation
+const processCards = (cards: Card[]) => {
+  let result = []
+  for (let card of cards) {
+    if (card.name) {
+      let processed = { ...card, normalized: true }
+      processed.meta = getMeta(card)
+      result.push(processed)
+    }
+  }
+  result.sort((a, b) => b.power - a.power)
+  return result
+}
+```
+
+### Result Pattern for Error Handling
+```typescript
+// ✅ GOOD: Explicit success/failure handling
+type Result<T, E = Error> = 
+  | { success: true; data: T }
+  | { success: false; error: E }
+
+const validateDeck = (deck: Deck): Result<Deck, string> => {
+  if (deck.cards.length < 40) {
+    return { success: false, error: 'Too few cards' }
+  }
+  
+  if (deck.cards.length > 50) {
+    return { success: false, error: 'Too many cards' }
+  }
+  
+  return { success: true, data: deck }
+}
+
+// Usage
+const result = validateDeck(deck)
+if (result.success) {
+  console.log('Valid deck:', result.data)
+} else {
+  console.error('Invalid:', result.error)
+}
+```
+
+## Incremental Development
+
+### Small Steps
+- Make one change at a time
+- Test each change before moving forward
+- Commit working code frequently
+- Never break the main app while adding features
+
+### Migration Strategy
+- Keep localStorage as fallback during Supabase integration
+- Test Supabase features in isolation first
+- Gradually replace localStorage with Supabase
+- Always have a rollback plan
+
+## Performance with Readability
+
+### Memoization for Expensive Computations
+```typescript
+// ✅ GOOD: Clear, memoized computation
+const useDeckStatistics = (deck: Deck | null) => {
+  return useMemo(() => {
+    if (!deck) return null
+    
+    return {
+      totalCards: calculateTotalCards(deck),
+      averageCost: calculateAverageCost(deck),
+      colorDistribution: calculateColorDistribution(deck),
+      powerRating: calculatePowerRating(deck),
+    }
+  }, [deck])
+}
+
+// ❌ BAD: Recomputing every render
+const useDeckStatistics = (deck) => {
+  if (!deck) return null
+  return {
+    totalCards: deck.cards.length,
+    averageCost: deck.cards.reduce((a, c) => a + c.cost, 0) / deck.cards.length,
+    // ... expensive calculations every render
+  }
+}
+```
+
+## Anti-Patterns to Avoid
+
+```typescript
+// ❌ BAD: Magic numbers
+const isValidDeck = (cards: Card[]) => 
+  cards.length >= 40 && cards.length <= 50
+
+// ✅ GOOD: Named constants
+const MIN_DECK_SIZE = 40
+const MAX_DECK_SIZE = 50
+
+const isValidDeck = (cards: Card[]) =>
+  cards.length >= MIN_DECK_SIZE && 
+  cards.length <= MAX_DECK_SIZE
+
+// ❌ BAD: Boolean flags
+const processCard = (card: Card, flag1: boolean, flag2: boolean) => {
+  // What do these flags mean?
+}
+
+// ✅ GOOD: Named options
+interface ProcessCardOptions {
+  includeStats: boolean
+  enrichWithMeta: boolean
+}
+
+const processCard = (card: Card, options: ProcessCardOptions) => {
+  // Clear intent
+}
+
+// ❌ BAD: Nested ternaries
+const getStatus = (count: number) =>
+  count < 40 ? 'too few' : count > 50 ? 'too many' : 'valid'
+
+// ✅ GOOD: Early returns or switch
+const getStatus = (count: number): string => {
+  if (count < 40) return 'too few'
+  if (count > 50) return 'too many'
+  return 'valid'
+}
+```
+
+## Critical Rules
+
+- ❌ **NO JSONB columns for relational data** - Use proper foreign keys
+- ❌ **Don't skip RLS policies** - Always check user permissions
+- ❌ **Don't forget user_id** - Include it in all user-owned data inserts
+- ❌ **Don't use custom users table** - Use Supabase's auth.users
+- ❌ **Don't break localStorage** - Keep it as fallback during migration
+- ❌ **Don't ignore loading states** - Always show feedback for async operations
+- ❌ **Don't use inline event handlers** - Use useCallback for performance
+- ❌ **Don't mutate state directly** - Always return new objects/arrays
+- ❌ **Don't write functions over 20 lines** - Extract into smaller functions
+- ❌ **Don't use abbreviations** - Write full, descriptive names
+
+## Summary Checklist
+
+Before committing code, ask:
+
+- [ ] **Can someone else understand this without my help?**
+- [ ] **Are functions pure when possible?**
+- [ ] **Is data immutable?**
+- [ ] **Are variable names descriptive?**
+- [ ] **Are functions under 20 lines?**
+- [ ] **Is there a single responsibility per function?**
+- [ ] **Are side effects isolated and clear?**
+- [ ] **Is the code declarative (WHAT) not imperative (HOW)?**
+- [ ] **Would this be easy to test?**
+- [ ] **Would this be easy to refactor?**
+
+## Development Workflow
+
+### Start Services
+```bash
+npx supabase start  # Start local Supabase
+npm run dev         # Start Vite dev server
+```
+
+### Database Changes
+```bash
+# Update schema in src/db/schema.ts
+npx drizzle-kit generate  # Generate migration
+npx supabase db reset     # Apply migrations
+```
+
+### Git Commits
+```
+feat: add user authentication
+fix: resolve deck creation RLS issue
+refactor: normalize database schema
+test: add deck builder integration tests
+docs: update API documentation
+```
+```
+
+Copy this entire block and save it as `.cursorrules` in your project root (`/Users/abhi/Desktop/optcg-web/my-app/.cursorrules`)!
